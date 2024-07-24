@@ -1,1 +1,330 @@
-Hello World
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blockchain Utility Tools</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/css/uikit.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/js/uikit.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/js/uikit-icons.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.10.0/web3.min.js"></script>
+        <script src="https://unpkg.com/@solana/web3.js@1.95.1/lib/index.iife.js"></script>
+    </head>
+    <body>
+        <h1 class="uk-heading-line uk-text-center uk-margin-top">Blockchain Utility Tools</h1>
+        <div class="uk-margin-small-left uk-margin-small-right">
+            <div uk-grid>
+                <div class="uk-width-expand@m">
+                    <input id="rpc" class="uk-input" type="text" placeholder="RPC">
+                </div>
+                <div class="uk-width-1-6@m uk-text-center">
+                    <span>OR</span>
+                </div>
+                <div class="uk-width-auto@m">
+                    <button onclick="connectToMetamask()" class="uk-button uk-button-primary" disabled>Connect to Metamask</button>
+                </div>
+            </div>
+            <ul class="uk-flex-left" uk-tab>
+                <li class="uk-active"><a href="#">Get Transaction</a></li>
+                <li class="uk-active"><a href="#">Generate new Account</a></li>
+                <li class="uk-active"><a href="#">Check RPC</a></li>
+                <li class="uk-active"><a href="#">Interact with Smart Contract</a></li>
+                <li class="uk-active"><a href="#">Decode Input Data</a></li>
+            </ul>
+            <div class="uk-switcher uk-margin">
+                <div>
+                    <input id="hash-1" class="uk-input uk-margin-small-top" type="text" placeholder="Hash">
+                    <button onclick="getTransaction()" class="uk-button uk-button-primary uk-margin-top">Get Transaction</button>
+                    <button onclick="getTransactionReceipt()" class="uk-button uk-button-primary uk-margin-top">Get Transaction Receipt</button>
+                    <textarea id="result-1" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <button onclick="generateNewAccount()" class="uk-button uk-button-primary uk-margin-top">Generate new Account</button>
+                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top" disabled>Generate Mnemonic</button>
+                    <textarea id="result-2" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <button onclick="getLatestBlock()" class="uk-button uk-button-primary uk-margin-top">Get Latest Block</button>
+                    <textarea id="result-3" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <input id="contract-4" class="uk-input uk-margin-small-top" type="text" placeholder="Contract Address">
+                    <textarea id="abi-4" class="uk-textarea uk-margin-top" rows="5" placeholder="ABI"></textarea>
+                    <button onclick="generateFunctions()" class="uk-button uk-button-primary uk-margin-top">Generate Functions</button>
+                    <div class="uk-margin-top">
+                        <ul id="read-buttons-4" uk-accordion></ul>
+                        <ul id="write-buttons-4" uk-accordion></ul>
+                    </div>
+                    <textarea id="result-4" class="uk-textarea" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <input id="input-5" class="uk-input uk-margin-small-top" type="text" placeholder="Input Data">
+                    <textarea id="abi-5" class="uk-textarea uk-margin-top" rows="5" placeholder="ABI"></textarea>
+                    <button onclick="decode()" class="uk-button uk-button-primary uk-margin-top">Decode</button>
+                    <textarea id="result-5" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+            </div>
+        </div>
+        <script>
+            BigInt.prototype.toJSON = function() { return this.toString() }
+
+            async function connectToMetamask() {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const tx = await web3.eth.getTransaction(document.getElementById('hash-1').value);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getTransaction() {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const tx = await web3.eth.getTransaction(document.getElementById('hash-1').value);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getTransactionReceipt() {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const tx = await web3.eth.getTransactionReceipt(document.getElementById('hash-1').value);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function generateNewAccount() {
+                try {
+                    const web3 = new Web3();
+                    const accounts = await web3.eth.accounts.create();
+                    document.getElementById('result-2').value = JSON.stringify(accounts, null, 2);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-2').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getLatestBlock() {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const block = await web3.eth.getBlock('latest');
+                    document.getElementById('result-3').value = JSON.stringify(block, null, 2);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-3').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function generateFunctions() {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const functions = JSON.parse(document.getElementById('abi-4').value);
+                    const readFunctions = [];
+                    const writeFunctions = [];
+                    functions.forEach(f => {
+                        if (f.type === 'function') {
+                            if (f.constant) {
+                                if (f.inputs.length) {
+                                    const inputs = [];
+                                    const args = [];
+                                    const types = [];
+
+                                    f.inputs.forEach(i => {
+                                        inputs.push(`<input id="${f.name}-${i.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${i.name} (${i.type})">`);
+                                        args.push(i.name);
+                                        types.push(i.type);
+                                    });
+
+                                    readFunctions.push(`
+                                        <li>
+                                            <a class="uk-accordion-title uk-text-success" href>${f.name}(${types.join()})</a>
+                                            <div class="uk-accordion-content">
+                                                ${inputs.join('')}
+                                                <button onclick="read('${f.name}',['${args.join("','")}'])" class="uk-button uk-button-default">Query</button><br/>
+                                            </div>
+                                        </li>
+                                    `);
+                                } else {
+                                    readFunctions.push(`
+                                        <li>
+                                            <a class="uk-accordion-title uk-text-success" href>${f.name}</a>
+                                            <div class="uk-accordion-content">
+                                                <button onclick="read('${f.name}',[])" class="uk-button uk-button-default">Query</button><br/>
+                                            </div>
+                                        </li>
+                                    `);
+                                }
+                            } else {
+                                if (f.inputs.length) {
+                                    const inputs = [`<input id="${f.name}-sender" class="uk-input uk-margin-small-bottom" type="text" placeholder="sender">`];
+                                    const args = [];
+                                    const types = [];
+
+                                    f.inputs.forEach(i => {
+                                        inputs.push(`<input id="${f.name}-${i.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${i.name} (${i.type})">`);
+                                        args.push(i.name);
+                                        types.push(i.type);
+                                    });
+
+                                    writeFunctions.push(`
+                                        <li>
+                                            <a class="uk-accordion-title uk-text-warning" href>${f.name}(${types.join()})</a>
+                                            <div class="uk-accordion-content">
+                                                ${inputs.join('')}
+                                                <button onclick="encode('${f.name}',['${args.join("','")}'])" class="uk-button uk-button-default">ENCODE</button>
+                                                <button onclick="simulate('${f.name}',['${args.join("','")}'])" class="uk-button uk-button-default">Simulate</button>
+                                                <button onclick="write('${f.name}',['${args.join("','")}'])" class="uk-button uk-button-default" disabled>Write</button><br/>
+                                            </div>
+                                        </li>
+                                    `);
+                                } else {
+                                    writeFunctions.push(`
+                                        <li>
+                                            <a class="uk-accordion-title uk-text-warning" href>${f.name}</a>
+                                            <div class="uk-accordion-content">
+                                                <input id="${f.name}-sender" class="uk-input uk-margin-small-bottom" type="text" placeholder="sender">
+                                                <button onclick="encode('${f.name}',[])" class="uk-button uk-button-default">Encode</button>
+                                                <button onclick="simulate('${f.name}',[])" class="uk-button uk-button-default">Simulate</button>
+                                                <button onclick="write('${f.name}',[])" class="uk-button uk-button-default" disabled>Write</button><br/>
+                                            </div>
+                                        </li>
+                                    `);
+                                }
+                            }
+                        }
+                    });
+                    document.getElementById('read-buttons-4').innerHTML = readFunctions.join('');
+                    document.getElementById('write-buttons-4').innerHTML = writeFunctions.join('');
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function read(functionName, args) {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const contract = new web3.eth.Contract(
+                        JSON.parse(document.getElementById('abi-4').value),
+                        document.getElementById('contract-4').value
+                    );
+                    let result;
+                    if (args.length) {
+                        args = args.map(arg => document.getElementById(`${functionName}-${arg}`).value);
+                        result = await contract.methods[functionName](...args).call();
+                    } else {
+                        result = await contract.methods[functionName]().call();
+                    }
+                    document.getElementById('result-4').value = result;
+                    UIkit.scroll(`#result-4`).scrollTo('#result-4');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function encode(functionName, args) {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const contract = new web3.eth.Contract(
+                        JSON.parse(document.getElementById('abi-4').value),
+                        document.getElementById('contract-4').value
+                    );
+                    let result;
+                    if (args.length) {
+                        args = args.map(arg => document.getElementById(`${functionName}-${arg}`).value);
+                        result = await contract.methods[functionName](...args).encodeABI();
+                    } else {
+                        result = await contract.methods[functionName]().encodeABI();
+                    }
+                    document.getElementById('result-4').value = result;
+                    UIkit.scroll(`#result-4`).scrollTo('#result-4');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function simulate(functionName, args) {
+                try {
+                    const web3 = new Web3(document.getElementById('rpc').value);
+                    const contract = new web3.eth.Contract(
+                        JSON.parse(document.getElementById('abi-4').value),
+                        document.getElementById('contract-4').value
+                    );
+                    let method;
+                    if (args.length) {
+                        args = args.map(arg => document.getElementById(`${functionName}-${arg}`).value);
+                        method = await contract.methods[functionName](...args);
+                    } else {
+                        method = await contract.methods[functionName]();
+                    }
+                    try {
+                        await web3.eth.call({
+                            from: document.getElementById(`${functionName}-sender`).value,
+                            to: document.getElementById('contract-4').value,
+                            data: method.encodeABI(),
+                        });
+                        document.getElementById('result-4').value = 'OK';
+                        UIkit.scroll(`#result-4`).scrollTo('#result-4');
+                        UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                    } catch (err) {
+                        if (err.data) {
+                            const result = err.data.startsWith('0x') ? err.data : `0x${err.data}`;
+                            const reason = web3.utils.toAscii(`0x${result.substr(138)}`);
+                            document.getElementById('result-4').value = `Revert: ${reason}`;
+                        } else if (err?.cause.message) {
+                            document.getElementById('result-4').value = `Revert: ${err.cause.message}`;
+                        } else {
+                            document.getElementById('result-4').value = 'Revert';
+                            console.log(err);
+                        }
+                        UIkit.scroll(`#result-4`).scrollTo('#result-4');
+                        UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> revert', status: 'danger'});
+                    }
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function decode() {
+                try {
+                    const web3 = new Web3();
+                    const functions = JSON.parse(document.getElementById('abi-4').value);
+                    const inputData = document.getElementById('input-5').value;
+                    let found;
+                    functions.forEach(f => {
+                        if (f.type === 'function' && web3.eth.abi.encodeFunctionSignature(f) === inputData.substring(0, 10)) {
+                            found = f;
+                        }
+                    });
+                    if (found) {
+                        const result = web3.eth.abi.decodeParameters(found.inputs, `0x${inputData.slice(10 - inputData.length)}`);
+                        document.getElementById('result-5').value = JSON.stringify(result, null, 2);
+                        UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                    } else {
+                        document.getElementById('result-5').value = 'No matching function found';
+                        UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                    }
+                } catch (err) {
+                    document.getElementById('result-5').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+        </script>
+    </body>
+</html>
