@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Solana Utility Tools</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/css/uikit.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/js/uikit.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.21.7/js/uikit-icons.min.js"></script>
+        <script src="https://unpkg.com/@solana/web3.js@1.95.1/lib/index.iife.js"></script>
+    </head>
+    <body>
+        <a href="https://github.com/quanttb/quanttb.github.io" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+        <h1 class="uk-heading-line uk-text-center uk-margin-top">Solana Utility Tools</h1>
+        <div class="uk-margin-small-left uk-margin-small-right">
+            <div uk-grid>
+                <div class="uk-width-expand@m">
+                    <input id="network" class="uk-input" type="text">
+                </div>
+                <div>
+                    <button class="uk-button uk-button-default">Choose</button>
+                    <div class="uk-dropdown-small" uk-dropdown>
+                        <ul class="uk-nav uk-dropdown-nav">
+                            <li><a href="#" onclick="setNetwork('mainnet-beta')">Mainnet Beta</a></li>
+                            <li><a href="#" onclick="setNetwork('testnet')">Testnet</a></li>
+                            <li><a href="#" onclick="setNetwork('devnet')">Devnet</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="connectToPhantom()" class="uk-button uk-button-primary" disabled>Connect to Phantom</button>
+                </div>
+            </div>
+            <ul class="uk-flex-left" uk-tab>
+                <li><a href="#">Generate new Account</a></li>
+                <li><a href="#">Get PDA</a></li>
+                <li class="uk-active"><a href="#">Get ATA</a></li>
+                <li><a href="#">Get Transaction</a></li>
+            </ul>
+            <div class="uk-switcher uk-margin">
+                <div>
+                    <button onclick="generateNewAccount()" class="uk-button uk-button-primary uk-margin-top">Generate new Account</button>
+                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top" disabled>Generate Mnemonic</button>
+                    <textarea id="result-1" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+
+                </div>
+                <div>
+                    <input id="mint-3" class="uk-input uk-margin-small-top" type="text" placeholder="Mint">
+                    <input id="user-3" class="uk-input uk-margin-small-top" type="text" placeholder="User">
+                    <button onclick="getAta()" class="uk-button uk-button-primary uk-margin-top">Get ATA</button>
+                    <textarea id="result-3" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+            </div>
+        </div>
+        <script src="js/bip39.js"></script>
+        <script src="js/borsh.js"></script>
+        <script src="js/bs58.js"></script>
+        <script src="js/buffer.js"></script>
+        <script>
+            BigInt.prototype.toJSON = function() { return this.toString() };
+
+            const web3 = solanaWeb3;
+            const TOKEN_PROGRAM_ID = new web3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+            const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+            const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
+            async function setNetwork(network) {
+                document.getElementById('network').value = web3.clusterApiUrl(network);
+            }
+
+            async function connectToPhantom() {}
+
+            async function generateNewAccount() {
+                try {
+                    const account = await web3.Keypair.generate();
+                    document.getElementById('result-1').value = JSON.stringify(
+                        {
+                            publicKey: account.publicKey.toBase58(),
+                            secretKey: Buffer.from(account.secretKey).toString('hex'),
+                        },
+                        null,
+                        2
+                    );
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function generateMnemonic() {}
+
+            async function getAta() {
+                try {
+                    const accounts = [];
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+
+                    const user = new web3.PublicKey(document.getElementById('user-3').value);
+                    const mint = new web3.PublicKey(document.getElementById('mint-3').value);
+                    let accountInfo, parsedData, layout;
+
+                    const ata = web3.PublicKey.findProgramAddressSync(
+                        [
+                            user.toBuffer(),
+                            TOKEN_PROGRAM_ID.toBuffer(),
+                            mint.toBuffer(),
+                        ],
+                        SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+                    )[0];
+                    accountInfo = await connection.getAccountInfo(ata);
+                    parsedData = null;
+                    if (accountInfo?.data) {
+                        layout = borsh.struct([
+                            borsh.publicKey('mint'),
+                            borsh.publicKey('owner'),
+                            borsh.u64('amount'),
+                            borsh.u32('delegateOption'),
+                            borsh.publicKey('delegate'),
+                            borsh.u8('state'),
+                            borsh.u32('isNativeOption'),
+                            borsh.u64('isNative'),
+                            borsh.u64('delegatedAmount'),
+                            borsh.u32('closeAuthorityOption'),
+                            borsh.publicKey('closeAuthority'),
+                        ]);
+                        parsedData = layout.decode(accountInfo.data);
+                    }
+                    accounts.push({
+                        type: 'ATA',
+                        publicKey: ata.toBase58(),
+                        parsedData,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    });
+
+                    const metadataAccount = web3.PublicKey.findProgramAddressSync(
+                        [
+                            Buffer.from('metadata'),
+                            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+                            mint.toBuffer(),
+                        ],
+                        TOKEN_METADATA_PROGRAM_ID
+                    )[0];
+                    accountInfo = await connection.getAccountInfo(metadataAccount);
+                    parsedData = null;
+                    if (accountInfo?.data) {
+                        layout = borsh.struct([
+                            borsh.u8('key'),
+                            borsh.publicKey('updateAuthority'),
+                            borsh.publicKey('mint'),
+                            borsh.str('name'),
+                            borsh.str('symbol'),
+                            borsh.str('uri'),
+                            borsh.u16('sellerFeeBasisPoints'),
+                            borsh.option(
+                                borsh.vec(
+                                    borsh.struct([
+                                        borsh.publicKey('address'),
+                                        borsh.u8('verified'),
+                                        borsh.u8('share'),
+                                    ])
+                                ),
+                                'creators'
+                            ),
+                            borsh.u8('primarySaleHappened'),
+                            borsh.u8('isMutable'),
+                            borsh.option(
+                                borsh.u8(),
+                                'editionNonce'
+                            ),
+                            borsh.option(
+                                borsh.u8(),
+                                'tokenStandard'
+                            ),
+                            borsh.option(
+                                borsh.struct([
+                                    borsh.bool('verified'),
+                                    borsh.publicKey('key'),
+                                ]),
+                                'collection'
+                            ),
+                            borsh.option(
+                                borsh.struct([
+                                    borsh.u8('useMethod'),
+                                    borsh.u64('remaining'),
+                                    borsh.u64('total'),
+                                ]),
+                                'uses'
+                            ),
+                            borsh.option(
+                                borsh.struct([
+                                    borsh.u64('size'),
+                                ]),
+                                'collectionDetails'
+                            ),
+                            borsh.option(
+                                borsh.struct([
+                                    borsh.option(
+                                        borsh.struct([
+                                            borsh.publicKey(),
+                                        ]),
+                                        'ruleSet'
+                                    ),
+                                ]),
+                                'programmableConfig'
+                            ),
+                        ]);
+                        parsedData = layout.decode(accountInfo.data);
+                    }
+                    accounts.push({
+                        type: 'Metadata',
+                        publicKey: metadataAccount.toBase58(),
+                        parsedData,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    });
+
+                    const masterEditionAccount = web3.PublicKey.findProgramAddressSync(
+                        [
+                            Buffer.from('metadata'),
+                            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+                            mint.toBuffer(),
+                            Buffer.from('edition'),
+                        ],
+                        TOKEN_METADATA_PROGRAM_ID
+                    )[0];
+                    accountInfo = await connection.getAccountInfo(masterEditionAccount);
+                    parsedData = null;
+                    if (accountInfo?.data) {
+                        layout = borsh.struct([
+                            borsh.u8('key'),
+                            borsh.u64('supply'),
+                            borsh.option(
+                                borsh.u64(),
+                                'maxSupply'
+                            ),
+                        ]);
+                        parsedData = layout.decode(accountInfo.data);
+                    }
+                    accounts.push({
+                        type: 'Master Edition',
+                        publicKey: masterEditionAccount.toBase58(),
+                        parsedData,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    });
+
+                    const tokenRecordAccount = web3.PublicKey.findProgramAddressSync(
+                        [
+                            Buffer.from('metadata'),
+                            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+                            mint.toBuffer(),
+                            Buffer.from('token_record'),
+                            ata.toBuffer(),
+                        ],
+                        TOKEN_METADATA_PROGRAM_ID
+                    )[0];
+                    accountInfo = await connection.getAccountInfo(tokenRecordAccount);
+                    parsedData = null;
+                    if (accountInfo?.data) {
+                        layout = borsh.struct([
+                            borsh.u8('key'),
+                            borsh.u8('bump'),
+                            borsh.u8('state'),
+                            borsh.option(
+                                borsh.u64(),
+                                'ruleSetRevision'
+                            ),
+                            borsh.option(
+                                borsh.publicKey(),
+                                'delegate'
+                            ),
+                            borsh.option(
+                                borsh.u8(),
+                                'delegateRole'
+                            ),
+                            borsh.option(
+                                borsh.publicKey(),
+                                'lockedTransfer'
+                            ),
+                        ]);
+                        parsedData = layout.decode(accountInfo.data);
+                    }
+                    accounts.push({
+                        type: 'Token Record',
+                        publicKey: tokenRecordAccount.toBase58(),
+                        parsedData,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    });
+
+                    document.getElementById('result-3').value = JSON.stringify(accounts, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-3').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+        </script>
+    </body>
+</html>
