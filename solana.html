@@ -30,19 +30,21 @@
                 </div>
             </div>
             <ul class="uk-flex-left" uk-tab>
-                <li><a href="#">Generate new Account</a></li>
+                <li class="uk-active"><a href="#">Generate new Account</a></li>
                 <li><a href="#">Get PDA</a></li>
-                <li class="uk-active"><a href="#">Get ATA</a></li>
+                <li><a href="#">Get ATA</a></li>
                 <li><a href="#">Get Transaction</a></li>
+                <li><a href="#">Serialize</a></li>
+                <li><a href="#">Deserialize</a></li>
+                <li><a href="#">Simulate Transaction</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
                 <div>
                     <button onclick="generateNewAccount()" class="uk-button uk-button-primary uk-margin-top">Generate new Account</button>
-                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top" disabled>Generate Mnemonic</button>
+                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top">Generate Mnemonic</button>
                     <textarea id="result-1" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
                 <div>
-
                 </div>
                 <div>
                     <input id="mint-3" class="uk-input uk-margin-small-top" type="text" placeholder="Mint">
@@ -50,12 +52,18 @@
                     <button onclick="getAta()" class="uk-button uk-button-primary uk-margin-top">Get ATA</button>
                     <textarea id="result-3" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
+                <div>
+                    <input id="signature-4" class="uk-input uk-margin-small-top" type="text" placeholder="Signature">
+                    <button onclick="getTransaction()" class="uk-button uk-button-primary uk-margin-top">Get Transaction</button>
+                    <textarea id="result-4" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
             </div>
         </div>
         <script src="js/bip39.js"></script>
         <script src="js/borsh.js"></script>
         <script src="js/bs58.js"></script>
         <script src="js/buffer.js"></script>
+        <script src="js/ed25519-hd-key.js"></script>
         <script>
             BigInt.prototype.toJSON = function() { return this.toString() };
 
@@ -76,7 +84,7 @@
                     document.getElementById('result-1').value = JSON.stringify(
                         {
                             publicKey: account.publicKey.toBase58(),
-                            secretKey: Buffer.from(account.secretKey).toString('hex'),
+                            secretKey: bs58.encode(account.secretKey),
                         },
                         null,
                         2
@@ -88,7 +96,32 @@
                 }
             }
 
-            async function generateMnemonic() {}
+            async function generateMnemonic(numberOfAccounts = 10) {
+                try {
+                    const mnemonic = bip39.generateMnemonic();
+                    const seed = bip39.mnemonicToSeedSync(mnemonic);
+                    const accounts = [];
+
+                    for (let i = 0; i < numberOfAccounts; i++) {
+                        const path = `m/44'/501'/${i}'/0'`;
+                        const derivedSeed = ed25519HdKey.derivePath(path, seed.toString('hex')).key;
+                        const account = web3.Keypair.fromSeed(derivedSeed);
+
+                        accounts.push({
+                            publicKey: account.publicKey.toBase58(),
+                            secretKey: bs58.encode(account.secretKey),
+                        });
+                    }
+
+                    const result = { mnemonic, accounts };
+
+                    document.getElementById('result-1').value = JSON.stringify(result, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
 
             async function getAta() {
                 try {
@@ -289,6 +322,18 @@
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-3').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getTransaction() {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const tx = await connection.getTransaction(document.getElementById('signature-4').value);
+                    document.getElementById('result-4').value = JSON.stringify(tx, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
             }

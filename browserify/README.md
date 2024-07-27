@@ -12,6 +12,8 @@ browserify bip39.js -s bip39 -o ../js/bip39.js
 browserify borsh.js -s borsh -o ../js/borsh.js
 browserify bs58.js -s bs58 -o ../js/bs58.js
 browserify buffer.js -s Buffer -o ../js/buffer.js
+browserify ed25519-hd-key.js -s ed25519HdKey -o ../js/ed25519-hd-key.js
+browserify hdkey.js -s HDKey -o ../js/hdkey.js
 ```
 
 ## Known Issues

@@ -52,7 +52,7 @@
                 </div>
                 <div>
                     <button onclick="generateNewAccount()" class="uk-button uk-button-primary uk-margin-top">Generate new Account</button>
-                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top" disabled>Generate Mnemonic</button>
+                    <button onclick="generateMnemonic()" class="uk-button uk-button-primary uk-margin-top">Generate Mnemonic</button>
                     <textarea id="result-2" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
                 <div>
@@ -83,6 +83,8 @@
                 </div>
             </div>
         </div>
+        <script src="js/bip39.js"></script>
+        <script src="js/hdkey.js"></script>
         <script>
             BigInt.prototype.toJSON = function() { return this.toString() };
 
@@ -125,7 +127,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const tx = await web3.eth.getTransaction(document.getElementById('hash-1').value);
-                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-1').value = err.message;
@@ -137,7 +139,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const tx = await web3.eth.getTransactionReceipt(document.getElementById('hash-1').value);
-                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-1').value = err.message;
@@ -149,7 +151,7 @@
                 try {
                     const web3 = new Web3();
                     const account = await web3.eth.accounts.create();
-                    document.getElementById('result-2').value = JSON.stringify(account, null, 2);
+                    document.getElementById('result-2').value = JSON.stringify(account, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-2').value = err.message;
@@ -157,13 +159,38 @@
                 }
             }
 
-            async function generateMnemonic() {}
+            async function generateMnemonic(numberOfAccounts = 10) {
+                try {
+                    const web3 = new Web3();
+                    const mnemonic = bip39.generateMnemonic();
+                    const seed = bip39.mnemonicToSeedSync(mnemonic);
+                    const root = HDKey.fromMasterSeed(seed);
+                    const accounts = [];
+
+                    for (let i = 0; i < numberOfAccounts; i++) {
+                        const path = `m/44'/60'/0'/0/${i}`;
+                        const wallet = root.derive(path);
+                        const privateKey = `0x${wallet.privateKey.toString('hex')}`;
+                        const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+
+                        accounts.push({ address: account.address, privateKey });
+                    }
+
+                    const result = { mnemonic, accounts };
+
+                    document.getElementById('result-2').value = JSON.stringify(result, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-2').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
 
             async function getLatestBlock() {
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const block = await web3.eth.getBlock('latest');
-                    document.getElementById('result-3').value = JSON.stringify(block, null, 2);
+                    document.getElementById('result-3').value = JSON.stringify(block, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-3').value = err.message;
@@ -371,7 +398,7 @@
                     });
                     if (found) {
                         const result = web3.eth.abi.decodeParameters(found.inputs, `0x${inputData.slice(10 - inputData.length)}`);
-                        document.getElementById('result-5').value = JSON.stringify(result, null, 2);
+                        document.getElementById('result-5').value = JSON.stringify(result, null, 5);
                         UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                     } else {
                         document.getElementById('result-5').value = 'No matching function found';
@@ -387,7 +414,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const result = await eval(document.getElementById('function-6').value);
-                    document.getElementById('result-6').value = JSON.stringify(result, null, 2);
+                    document.getElementById('result-6').value = JSON.stringify(result, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-6').value = err.message;
