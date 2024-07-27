@@ -125,7 +125,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const tx = await web3.eth.getTransaction(document.getElementById('hash-1').value);
-                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-1').value = err.message;
@@ -137,7 +137,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const tx = await web3.eth.getTransactionReceipt(document.getElementById('hash-1').value);
-                    document.getElementById('result-1').value = JSON.stringify(tx, null, 2);
+                    document.getElementById('result-1').value = JSON.stringify(tx, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-1').value = err.message;
@@ -149,7 +149,7 @@
                 try {
                     const web3 = new Web3();
                     const account = await web3.eth.accounts.create();
-                    document.getElementById('result-2').value = JSON.stringify(account, null, 2);
+                    document.getElementById('result-2').value = JSON.stringify(account, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-2').value = err.message;
@@ -163,7 +163,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const block = await web3.eth.getBlock('latest');
-                    document.getElementById('result-3').value = JSON.stringify(block, null, 2);
+                    document.getElementById('result-3').value = JSON.stringify(block, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-3').value = err.message;
@@ -371,7 +371,7 @@
                     });
                     if (found) {
                         const result = web3.eth.abi.decodeParameters(found.inputs, `0x${inputData.slice(10 - inputData.length)}`);
-                        document.getElementById('result-5').value = JSON.stringify(result, null, 2);
+                        document.getElementById('result-5').value = JSON.stringify(result, null, 5);
                         UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                     } else {
                         document.getElementById('result-5').value = 'No matching function found';
@@ -387,7 +387,7 @@
                 try {
                     const web3 = new Web3(document.getElementById('rpc').value);
                     const result = await eval(document.getElementById('function-6').value);
-                    document.getElementById('result-6').value = JSON.stringify(result, null, 2);
+                    document.getElementById('result-6').value = JSON.stringify(result, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-6').value = err.message;

@@ -31,9 +31,12 @@
             </div>
             <ul class="uk-flex-left" uk-tab>
                 <li><a href="#">Generate new Account</a></li>
-                <li><a href="#">Get PDA</a></li>
-                <li class="uk-active"><a href="#">Get ATA</a></li>
+                <li class="uk-active"><a href="#">Get PDA</a></li>
+                <li><a href="#">Get ATA</a></li>
                 <li><a href="#">Get Transaction</a></li>
+                <li><a href="#">Serialize</a></li>
+                <li><a href="#">Deserialize</a></li>
+                <li><a href="#">Simulate Transaction</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
                 <div>
@@ -42,13 +45,17 @@
                     <textarea id="result-1" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
                 <div>
-
                 </div>
                 <div>
                     <input id="mint-3" class="uk-input uk-margin-small-top" type="text" placeholder="Mint">
                     <input id="user-3" class="uk-input uk-margin-small-top" type="text" placeholder="User">
                     <button onclick="getAta()" class="uk-button uk-button-primary uk-margin-top">Get ATA</button>
                     <textarea id="result-3" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <input id="signature-4" class="uk-input uk-margin-small-top" type="text" placeholder="Signature">
+                    <button onclick="getTransaction()" class="uk-button uk-button-primary uk-margin-top">Get Transaction</button>
+                    <textarea id="result-4" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
             </div>
         </div>
@@ -289,6 +296,18 @@
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-3').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getTransaction() {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const tx = await connection.getTransaction(document.getElementById('signature-4').value);
+                    document.getElementById('result-4').value = JSON.stringify(tx, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-4').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
             }
