@@ -30,11 +30,11 @@
                 </div>
             </div>
             <ul class="uk-flex-left" uk-tab>
-                <li class="uk-active"><a href="#">Generate new Account</a></li>
+                <li><a href="#">Generate new Account</a></li>
                 <li><a href="#">Get PDA</a></li>
                 <li><a href="#">Get ATA</a></li>
                 <li><a href="#">Get Transaction</a></li>
-                <li><a href="#">Deserialize</a></li>
+                <li class="uk-active"><a href="#">Deserialize</a></li>
                 <li><a href="#">Serialize</a></li>
                 <li><a href="#">Simulate Transaction</a></li>
             </ul>
@@ -99,8 +99,8 @@
                     <div class="uk-grid-small" uk-grid>
                         <div class="uk-width-1-6@s uk-margin-small-top">
                             <select id="type-5" class="uk-select">
-                                <option selected>hex</option>
-                                <option>base58</option>
+                                <option>hex</option>
+                                <option selected>base58</option>
                             </select>
                         </div>
                         <div class="uk-width-expand uk-margin-small-top">
@@ -111,9 +111,9 @@
                         <thead>
                             <tr>
                                 <th class="uk-table-shrink">Delete?</th>
-                                <th class="uk-table-expand">Name</th>
-                                <th class="uk-width-small">Type</th>
-                                <th class="uk-width-small">Optional?</th>
+                                <th class="uk-width-1-4@m">Name</th>
+                                <th class="uk-width-expand">Type</th>
+                                <th class="uk-width-shrink">Optional?</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -125,24 +125,28 @@
                                     <input class="uk-input" type="text" placeholder="Property Name">
                                 </td>
                                 <td>
-                                    <select class="uk-select">
-                                        <option>u8</option>
-                                        <option>i8</option>
-                                        <option>u16</option>
-                                        <option>i16</option>
-                                        <option>u32</option>
-                                        <option>i32</option>
-                                        <option>u64</option>
-                                        <option>i64</option>
-                                        <option>u128</option>
-                                        <option>i128</option>
-                                        <option selected>publicKey</option>
-                                        <option>bool</option>
-                                        <option>string</option>
-                                        <option>enum</option>
-                                        <option>array</option>
-                                        <option>struct</option>
-                                    </select>
+                                    <div uk-grid>
+                                        <div class="uk-width-expand@m">
+                                            <select onchange="changeType5(this)" class="uk-select">
+                                                <option>u8</option>
+                                                <option>i8</option>
+                                                <option>u16</option>
+                                                <option>i16</option>
+                                                <option>u32</option>
+                                                <option>i32</option>
+                                                <option>u64</option>
+                                                <option>i64</option>
+                                                <option>u128</option>
+                                                <option>i128</option>
+                                                <option selected>publicKey</option>
+                                                <option>bool</option>
+                                                <option>string</option>
+                                                <option>enum</option>
+                                                <option>array</option>
+                                                <option>struct</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <input class="uk-checkbox uk-margin-left" type="checkbox">
@@ -216,30 +220,69 @@
                             <input class="uk-input" type="text" placeholder="Property Name">
                         </td>
                         <td>
-                            <select class="uk-select">
-                                <option>u8</option>
-                                <option>i8</option>
-                                <option>u16</option>
-                                <option>i16</option>
-                                <option>u32</option>
-                                <option>i32</option>
-                                <option>u64</option>
-                                <option>i64</option>
-                                <option>u128</option>
-                                <option>i128</option>
-                                <option selected>publicKey</option>
-                                <option>bool</option>
-                                <option>string</option>
-                                <option>enum</option>
-                                <option>array</option>
-                                <option>struct</option>
-                            </select>
+                            <div uk-grid>
+                                <div class="uk-width-expand@m">
+                                    <select onchange="changeType5(this)" class="uk-select">
+                                        <option>u8</option>
+                                        <option>i8</option>
+                                        <option>u16</option>
+                                        <option>i16</option>
+                                        <option>u32</option>
+                                        <option>i32</option>
+                                        <option>u64</option>
+                                        <option>i64</option>
+                                        <option>u128</option>
+                                        <option>i128</option>
+                                        <option selected>publicKey</option>
+                                        <option>bool</option>
+                                        <option>string</option>
+                                        <option>enum</option>
+                                        <option>array</option>
+                                        <option>struct</option>
+                                    </select>
+                                </div>
+                            </div>
                         </td>
                         <td>
                             <input class="uk-checkbox uk-margin-left" type="checkbox">
                         </td>
                     </tr>
                 `);
+            }
+
+            function changeType5(select) {
+                switch (select.value) {
+                    case 'array':
+                        select.parentNode.parentNode.insertAdjacentHTML('beforeend', `
+                            <div class="uk-width-1-6@m">
+                                <input class="uk-input" type="number" placeholder="Length">
+                            </div>
+                            <div class="uk-width-1-3@m">
+                                <select onchange="changeType5(this)" class="uk-select">
+                                    <option selected>u8</option>
+                                    <option>i8</option>
+                                    <option>u16</option>
+                                    <option>i16</option>
+                                    <option>u32</option>
+                                    <option>i32</option>
+                                    <option>u64</option>
+                                    <option>i64</option>
+                                    <option>u128</option>
+                                    <option>i128</option>
+                                    <option>publicKey</option>
+                                    <option>bool</option>
+                                    <option>string</option>
+                                    <option>enum</option>
+                                </select>
+                            </div>
+                        `);
+                        break;
+                    default:
+                        while (select.parentNode.parentNode.children.length > 1) {
+                            select.parentNode.parentNode.removeChild(select.parentNode.parentNode.lastChild);
+                        }
+                        break;
+                }
             }
 
             async function setNetwork(network) {
@@ -552,10 +595,10 @@
 
             async function deserialize() {
                 try {
-                    const type = document.getElementById('type-5').value;
+                    const dataType = document.getElementById('type-5').value;
                     let data = document.getElementById('data-5').value;
 
-                    switch (type) {
+                    switch (dataType) {
                         case 'hex':
                             data = Buffer.from(data, 'hex');
                             break;
@@ -573,7 +616,7 @@
                     for (let row of rows) {
                         const name = row.getElementsByTagName('input')[0].value;
                         const type = row.getElementsByTagName('select')[0].value;
-                        const isOptional = row.getElementsByTagName('input')[1].checked;
+                        let isOptional = row.getElementsByTagName('input')[1].checked;
 
                         switch (type) {
                             case 'u8':
@@ -602,12 +645,22 @@
                                 ? properties.push(`borsh.option(borsh.u8(),'${name}')`)
                                 : properties.push(`borsh.u8('${name}')`);
                                 break;
+                            case 'array':
+                                const length = row.getElementsByTagName('input')[1].value;
+                                let subType = row.getElementsByTagName('select')[1].value;
+                                isOptional = row.getElementsByTagName('input')[2].checked;
+
+                                if (subType === 'enum') subType = 'u8';
+                                if (subType === 'string') subType = 'str';
+
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.array(borsh.${subType}(),${length}),'${name}')`)
+                                    : properties.push(`borsh.array(borsh.${subType}(),${length},'${name}')`);
+                                break;
                             case 'struct':
                                 continue;
                         }
                     }
-
-                    console.log(properties);
 
                     const layout = eval(`borsh.struct([${properties.join(',')}])`);
                     const result = layout.decode(data);
