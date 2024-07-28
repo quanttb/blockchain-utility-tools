@@ -30,12 +30,12 @@
                 </div>
             </div>
             <ul class="uk-flex-left" uk-tab>
-                <li><a href="#">Generate new Account</a></li>
-                <li class="uk-active"><a href="#">Get PDA</a></li>
+                <li class="uk-active"><a href="#">Generate new Account</a></li>
+                <li><a href="#">Get PDA</a></li>
                 <li><a href="#">Get ATA</a></li>
                 <li><a href="#">Get Transaction</a></li>
-                <li><a href="#">Serialize</a></li>
                 <li><a href="#">Deserialize</a></li>
+                <li><a href="#">Serialize</a></li>
                 <li><a href="#">Simulate Transaction</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
@@ -63,9 +63,9 @@
                                     <input class="uk-input" type="text" placeholder="Value">
                                 </td>
                                 <td>
-                                    <select class="uk-select" aria-label="Select">
-                                        <option>publicKey</option>
+                                    <select class="uk-select">
                                         <option>string</option>
+                                        <option>publicKey</option>
                                     </select>
                                 </td>
                             </tr>
@@ -74,7 +74,7 @@
                             <tr>
                                 <td></td>
                                 <td>
-                                    <button onclick="addRow()" class="uk-button uk-button-default">
+                                    <button onclick="addRow2()" class="uk-button uk-button-default">
                                         <span class="uk-margin-small-right" uk-icon="plus-circle"></span>Add Another
                                     </button>
                                 </td>
@@ -94,6 +94,74 @@
                     <input id="signature-4" class="uk-input uk-margin-small-top" type="text" placeholder="Signature">
                     <button onclick="getTransaction()" class="uk-button uk-button-primary uk-margin-top">Get Transaction</button>
                     <textarea id="result-4" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <div class="uk-grid-small" uk-grid>
+                        <div class="uk-width-1-6@s uk-margin-small-top">
+                            <select id="type-5" class="uk-select">
+                                <option selected>hex</option>
+                                <option>base58</option>
+                            </select>
+                        </div>
+                        <div class="uk-width-expand uk-margin-small-top">
+                            <input id="data-5" class="uk-input" type="text" placeholder="Data">
+                        </div>
+                    </div>
+                    <table id="layout-5" class="uk-table uk-table-striped uk-table-hover uk-table-middle">
+                        <thead>
+                            <tr>
+                                <th class="uk-table-shrink">Delete?</th>
+                                <th class="uk-table-expand">Name</th>
+                                <th class="uk-width-small">Type</th>
+                                <th class="uk-width-small">Optional?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button onclick="removeRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                                </td>
+                                <td>
+                                    <input class="uk-input" type="text" placeholder="Property Name">
+                                </td>
+                                <td>
+                                    <select class="uk-select">
+                                        <option>u8</option>
+                                        <option>i8</option>
+                                        <option>u16</option>
+                                        <option>i16</option>
+                                        <option>u32</option>
+                                        <option>i32</option>
+                                        <option>u64</option>
+                                        <option>i64</option>
+                                        <option>u128</option>
+                                        <option>i128</option>
+                                        <option selected>publicKey</option>
+                                        <option>bool</option>
+                                        <option>string</option>
+                                        <option>enum</option>
+                                        <option>array</option>
+                                        <option>struct</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input class="uk-checkbox uk-margin-left" type="checkbox">
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="addRow5()" class="uk-button uk-button-default">
+                                        <span class="uk-margin-small-right" uk-icon="plus-circle"></span>Add Another
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button onclick="deserialize()" class="uk-button uk-button-primary">Deserialize</button>
+                    <textarea id="result-5" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
             </div>
         </div>
@@ -115,7 +183,7 @@
                 row.parentNode.removeChild(row);
             }
 
-            function addRow() {
+            function addRow2() {
                 const table = document.getElementById('seed-2');
                 const tbody = table.getElementsByTagName('tbody')[0];
                 tbody.insertAdjacentHTML('beforeend', `
@@ -127,10 +195,48 @@
                             <input class="uk-input" type="text" placeholder="Value">
                         </td>
                         <td>
-                            <select class="uk-select" aria-label="Select">
-                                <option>publicKey</option>
+                            <select class="uk-select">
                                 <option>string</option>
+                                <option>publicKey</option>
                             </select>
+                        </td>
+                    </tr>
+                `);
+            }
+
+            function addRow5() {
+                const table = document.getElementById('layout-5');
+                const tbody = table.getElementsByTagName('tbody')[0];
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>
+                            <button onclick="removeRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                        </td>
+                        <td>
+                            <input class="uk-input" type="text" placeholder="Property Name">
+                        </td>
+                        <td>
+                            <select class="uk-select">
+                                <option>u8</option>
+                                <option>i8</option>
+                                <option>u16</option>
+                                <option>i16</option>
+                                <option>u32</option>
+                                <option>i32</option>
+                                <option>u64</option>
+                                <option>i64</option>
+                                <option>u128</option>
+                                <option>i128</option>
+                                <option selected>publicKey</option>
+                                <option>bool</option>
+                                <option>string</option>
+                                <option>enum</option>
+                                <option>array</option>
+                                <option>struct</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input class="uk-checkbox uk-margin-left" type="checkbox">
                         </td>
                     </tr>
                 `);
@@ -211,7 +317,15 @@
 
                     const programId = new web3.PublicKey(document.getElementById('program-2').value);
                     const [programAddress, bump] = web3.PublicKey.findProgramAddressSync(seeds, programId);
-                    const result = { programAddress: programAddress.toBase58(), bump };
+
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const accountInfo = await connection.getAccountInfo(programAddress);
+
+                    const result = {
+                        programAddress: programAddress.toBase58(),
+                        bump,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    };
 
                     document.getElementById('result-2').value = JSON.stringify(result, null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
@@ -432,6 +546,76 @@
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function deserialize() {
+                try {
+                    const type = document.getElementById('type-5').value;
+                    let data = document.getElementById('data-5').value;
+
+                    switch (type) {
+                        case 'hex':
+                            data = Buffer.from(data, 'hex');
+                            break;
+                        case 'base58':
+                            data = Buffer.from(bs58.decode(data));
+                            break;
+                    }
+
+                    const table = document.getElementById('layout-5');
+                    const tbody = table.getElementsByTagName('tbody')[0];
+                    const rows = tbody.getElementsByTagName('tr');
+
+                    const properties = [];
+
+                    for (let row of rows) {
+                        const name = row.getElementsByTagName('input')[0].value;
+                        const type = row.getElementsByTagName('select')[0].value;
+                        const isOptional = row.getElementsByTagName('input')[1].checked;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                            case 'publicKey':
+                            case 'bool':
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.${type}(),'${name}')`)
+                                    : properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'string':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.str(),'${name}')`)
+                                    : properties.push(`borsh.str('${name}')`);
+                                break;
+                            case 'enum':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.u8(),'${name}')`)
+                                : properties.push(`borsh.u8('${name}')`);
+                                break;
+                            case 'struct':
+                                continue;
+                        }
+                    }
+
+                    console.log(properties);
+
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    const result = layout.decode(data);
+
+                    document.getElementById('result-5').value = JSON.stringify(result, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-5').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
             }
