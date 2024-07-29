@@ -3,7 +3,7 @@
 ## Overview
 
 - No need to open VSCode; we can do it all on website. Fast and convenient.
-- [Live Demo](quanttb.github.io/blockchain-utility-tools)
+- [Live Demo](https://quanttb.github.io/blockchain-utility-tools/)
 
 ## Supported Networks
 
