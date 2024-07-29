@@ -34,9 +34,9 @@
                 <li><a href="#">Get PDA</a></li>
                 <li><a href="#">Get ATA</a></li>
                 <li><a href="#">Get Transaction</a></li>
-                <li><a href="#">Serialize</a></li>
                 <li><a href="#">Deserialize</a></li>
-                <li><a href="#">Simulate Transaction</a></li>
+                <li><a href="#">Serialize (N/A)</a></li>
+                <li><a href="#">Interact with Program (N/A)</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
                 <div>
@@ -45,6 +45,44 @@
                     <textarea id="result-1" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
                 <div>
+                    <input id="program-2" class="uk-input uk-margin-small-top" type="text" placeholder="Program">
+                    <table id="seed-2" class="uk-table uk-table-striped uk-table-hover uk-table-middle">
+                        <thead>
+                            <tr>
+                                <th class="uk-table-shrink">Delete?</th>
+                                <th class="uk-table-expand">Seed</th>
+                                <th class="uk-width-small">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button onclick="deleteRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                                </td>
+                                <td>
+                                    <input class="uk-input" type="text" placeholder="Value">
+                                </td>
+                                <td>
+                                    <select class="uk-select">
+                                        <option>string</option>
+                                        <option>publicKey</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="addRow2()" class="uk-button uk-button-default">
+                                        <span class="uk-margin-small-right" uk-icon="plus-circle"></span>Add Another
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button onclick="getPda()" class="uk-button uk-button-primary">Get PDA</button>
+                    <textarea id="result-2" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
                 <div>
                     <input id="mint-3" class="uk-input uk-margin-small-top" type="text" placeholder="Mint">
@@ -56,6 +94,94 @@
                     <input id="signature-4" class="uk-input uk-margin-small-top" type="text" placeholder="Signature">
                     <button onclick="getTransaction()" class="uk-button uk-button-primary uk-margin-top">Get Transaction</button>
                     <textarea id="result-4" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div>
+                    <div class="uk-grid-small" uk-grid>
+                        <div class="uk-width-1-6@s uk-margin-small-top">
+                            <select id="type-5" class="uk-select">
+                                <option selected>hex</option>
+                                <option>base58</option>
+                            </select>
+                        </div>
+                        <div class="uk-width-expand uk-margin-small-top">
+                            <input id="data-5" class="uk-input" type="text" placeholder="Data">
+                        </div>
+                    </div>
+                    <table id="layout-5" class="uk-table uk-table-striped uk-table-hover uk-table-middle">
+                        <thead>
+                            <tr>
+                                <th class="uk-table-shrink">Delete?</th>
+                                <th class="uk-width-1-4@m">Name</th>
+                                <th class="uk-width-expand">Type</th>
+                                <th class="uk-width-shrink">Optional?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button onclick="deleteRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                                </td>
+                                <td>
+                                    <input class="uk-input" type="text" placeholder="Property Name">
+                                </td>
+                                <td>
+                                    <div uk-grid>
+                                        <div class="uk-width-expand@m">
+                                            <select onchange="changeType5(this)" class="uk-select">
+                                                <option>u8</option>
+                                                <option>i8</option>
+                                                <option>u16</option>
+                                                <option>i16</option>
+                                                <option>u32</option>
+                                                <option>i32</option>
+                                                <option>u64</option>
+                                                <option>i64</option>
+                                                <option>u128</option>
+                                                <option>i128</option>
+                                                <option selected>publicKey</option>
+                                                <option>bool</option>
+                                                <option>string</option>
+                                                <option>enum</option>
+                                                <option>array</option>
+                                                <option>struct</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input class="uk-checkbox uk-margin-left" type="checkbox">
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="addRow5(this)" class="uk-button uk-button-default">
+                                        <span class="uk-margin-small-right" uk-icon="plus-circle"></span>Add Another
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div id="struct-5"></div>
+                    <button onclick="showModal5()" class="uk-button uk-button-default">Add new Struct</button>
+                    <button onclick="deserialize()" class="uk-button uk-button-primary">Deserialize</button>
+                    <textarea id="result-5" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
+                <div id="struct-modal-5" uk-modal>
+                    <div class="uk-modal-dialog uk-margin-auto-vertical">
+                        <button class="uk-modal-close-default" type="button" uk-close></button>
+                        <div class="uk-modal-header">
+                            <h2 class="uk-modal-title">New Struct</h2>
+                        </div>
+                        <div class="uk-modal-body">
+                            <input id="struct-name-5" class="uk-input" type="text" placeholder="Struct Name">
+                        </div>
+                        <div class="uk-modal-footer uk-text-right">
+                            <button onclick="addNewStruct5()" class="uk-button uk-button-primary" type="button">Create</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -71,6 +197,215 @@
             const TOKEN_PROGRAM_ID = new web3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
             const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
             const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
+            function deleteRow(button) {
+                const row = button.parentNode.parentNode;
+                row.parentNode.removeChild(row);
+            }
+
+            function addRow2() {
+                const table = document.getElementById('seed-2');
+                const tbody = table.getElementsByTagName('tbody')[0];
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>
+                            <button onclick="deleteRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                        </td>
+                        <td>
+                            <input class="uk-input" type="text" placeholder="Value">
+                        </td>
+                        <td>
+                            <select class="uk-select">
+                                <option>string</option>
+                                <option>publicKey</option>
+                            </select>
+                        </td>
+                    </tr>
+                `);
+            }
+
+            function addRow5(button) {
+                const table = button.parentNode.parentNode.parentNode.parentNode;
+                const tbody = table.getElementsByTagName('tbody')[0];
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td>
+                            <button onclick="deleteRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                        </td>
+                        <td>
+                            <input class="uk-input" type="text" placeholder="Property Name">
+                        </td>
+                        <td>
+                            <div uk-grid>
+                                <div class="uk-width-expand@m">
+                                    <select onchange="changeType5(this)" class="uk-select">
+                                        <option>u8</option>
+                                        <option>i8</option>
+                                        <option>u16</option>
+                                        <option>i16</option>
+                                        <option>u32</option>
+                                        <option>i32</option>
+                                        <option>u64</option>
+                                        <option>i64</option>
+                                        <option>u128</option>
+                                        <option>i128</option>
+                                        <option selected>publicKey</option>
+                                        <option>bool</option>
+                                        <option>string</option>
+                                        <option>enum</option>
+                                        <option>array</option>
+                                        <option>struct</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <input class="uk-checkbox uk-margin-left" type="checkbox">
+                        </td>
+                    </tr>
+                `);
+            }
+
+            function changeType5(select) {
+                while (select.parentNode.parentNode.children.length > 1) {
+                    select.parentNode.parentNode.removeChild(select.parentNode.parentNode.lastChild);
+                }
+
+                switch (select.value) {
+                    case 'array':
+                        select.parentNode.parentNode.insertAdjacentHTML('beforeend', `
+                            <div class="uk-width-1-6@m">
+                                <input class="uk-input" type="number" placeholder="Length">
+                            </div>
+                            <div class="uk-width-1-6@m">
+                                <select onchange="changeSubType5(this)" class="uk-select">
+                                    <option selected>u8</option>
+                                    <option>i8</option>
+                                    <option>u16</option>
+                                    <option>i16</option>
+                                    <option>u32</option>
+                                    <option>i32</option>
+                                    <option>u64</option>
+                                    <option>i64</option>
+                                    <option>u128</option>
+                                    <option>i128</option>
+                                    <option>publicKey</option>
+                                    <option>bool</option>
+                                    <option>string</option>
+                                    <option>enum</option>
+                                    <option>struct</option>
+                                </select>
+                            </div>
+                        `);
+                        break;
+                    case 'struct':
+                        select.parentNode.parentNode.insertAdjacentHTML('beforeend', `
+                            <div class="uk-width-1-3@m">
+                                <input class="uk-input" type="text" placeholder="Struct Name"></input>
+                            </div>
+                        `);
+                    break;
+                }
+            }
+
+            function changeSubType5(select) {
+                while (select.parentNode.parentNode.children.length > 3) {
+                    select.parentNode.parentNode.removeChild(select.parentNode.parentNode.lastChild);
+                }
+
+                switch (select.value) {
+                    case 'struct':
+                        select.parentNode.parentNode.insertAdjacentHTML('beforeend', `
+                            <div class="uk-width-1-6@m">
+                                <input class="uk-input" type="text" placeholder="Struct Name"></input>
+                            </div>
+                        `);
+                    break;
+                }
+            }
+
+            function showModal5() {
+                document.getElementById('struct-name-5').value = '';
+                UIkit.modal(document.getElementById('struct-modal-5')).show();
+            }
+
+            function addNewStruct5() {
+                UIkit.modal(document.getElementById('struct-modal-5')).hide();
+
+                const name = document.getElementById('struct-name-5').value;
+                const table = document.getElementById('struct-5');
+
+                table.insertAdjacentHTML('beforeend', `
+                    <table class="uk-table uk-table-striped uk-table-hover uk-table-middle">
+                        <caption>${name}</caption>
+                        <thead>
+                            <tr>
+                                <th class="uk-table-shrink">Delete?</th>
+                                <th class="uk-width-1-4@m">Name</th>
+                                <th class="uk-width-expand">Type</th>
+                                <th class="uk-width-shrink">Optional?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <button onclick="deleteRow(this)" class="uk-margin-small-right uk-float-right" uk-icon="minus-circle"></button>
+                                </td>
+                                <td>
+                                    <input class="uk-input" type="text" placeholder="Property Name">
+                                </td>
+                                <td>
+                                    <div uk-grid>
+                                        <div class="uk-width-expand@m">
+                                            <select onchange="changeType5(this)" class="uk-select">
+                                                <option>u8</option>
+                                                <option>i8</option>
+                                                <option>u16</option>
+                                                <option>i16</option>
+                                                <option>u32</option>
+                                                <option>i32</option>
+                                                <option>u64</option>
+                                                <option>i64</option>
+                                                <option>u128</option>
+                                                <option>i128</option>
+                                                <option selected>publicKey</option>
+                                                <option>bool</option>
+                                                <option>string</option>
+                                                <option>enum</option>
+                                                <option>array</option>
+                                                <option>struct</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input class="uk-checkbox uk-margin-left" type="checkbox">
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <button onclick="addRow5(this)" class="uk-button uk-button-default">
+                                        <span class="uk-margin-small-right" uk-icon="plus-circle"></span>Add Another
+                                    </button>
+                                </td>
+                                <td>
+                                    <button onclick="deleteStruct5(this)" class="uk-button uk-button-default">
+                                        <span class="uk-margin-small-right" uk-icon="minus-circle"></span>Delete Struct
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                `);
+            }
+
+            function deleteStruct5(button) {
+                const table = button.parentNode.parentNode.parentNode.parentNode;
+                table.parentNode.removeChild(table);
+            }
 
             async function setNetwork(network) {
                 document.getElementById('network').value = web3.clusterApiUrl(network);
@@ -119,6 +454,48 @@
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-1').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function getPda() {
+                try {
+                    const table = document.getElementById('seed-2');
+                    const tbody = table.getElementsByTagName('tbody')[0];
+                    const rows = tbody.getElementsByTagName('tr');
+
+                    const seeds = [];
+
+                    for (let row of rows) {
+                        const val = row.getElementsByTagName('input')[0].value;
+                        const type = row.getElementsByTagName('select')[0].value;
+
+                        switch (type) {
+                            case 'publicKey':
+                                seeds.push(new web3.PublicKey(val).toBuffer());
+                                break;
+                            case 'string':
+                                seeds.push(Buffer.from(val));
+                                break;
+                        }
+                    }
+
+                    const programId = new web3.PublicKey(document.getElementById('program-2').value);
+                    const [programAddress, bump] = web3.PublicKey.findProgramAddressSync(seeds, programId);
+
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const accountInfo = await connection.getAccountInfo(programAddress);
+
+                    const result = {
+                        programAddress: programAddress.toBase58(),
+                        bump,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    };
+
+                    document.getElementById('result-2').value = JSON.stringify(result, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-2').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
             }
@@ -334,6 +711,219 @@
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-4').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function deserialize() {
+                try {
+                    const dataType = document.getElementById('type-5').value;
+                    let data = document.getElementById('data-5').value;
+
+                    switch (dataType) {
+                        case 'hex':
+                            data = Buffer.from(data, 'hex');
+                            break;
+                        case 'base58':
+                            data = Buffer.from(bs58.decode(data));
+                            break;
+                    }
+
+                    const table = document.getElementById('layout-5');
+                    const tbody = table.getElementsByTagName('tbody')[0];
+                    const rows = tbody.getElementsByTagName('tr');
+
+                    const properties = [];
+
+                    for (let row of rows) {
+                        const name = row.getElementsByTagName('input')[0].value;
+                        const type = row.getElementsByTagName('select')[0].value;
+                        let isOptional = row.getElementsByTagName('input')[1].checked;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                            case 'publicKey':
+                            case 'bool':
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.${type}(),'${name}')`)
+                                    : properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'string':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.str(),'${name}')`)
+                                    : properties.push(`borsh.str('${name}')`);
+                                break;
+                            case 'enum':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.u8(),'${name}')`)
+                                : properties.push(`borsh.u8('${name}')`);
+                                break;
+                            case 'array':
+                                const length = row.getElementsByTagName('input')[1].value;
+                                const subType = row.getElementsByTagName('select')[1].value;
+                                isOptional = row.getElementsByTagName('input')[2].checked;
+
+                                if (subType === 'enum') subType = 'u8';
+                                if (subType === 'string') subType = 'str';
+                                if (subType === 'struct') {
+                                    const structName = row.getElementsByTagName('input')[2].value;
+                                    isOptional = row.getElementsByTagName('input')[3].checked;
+
+                                    const struct = document.getElementById('struct-5');
+                                    const captions = struct.getElementsByTagName("caption");
+
+                                    let found;
+                                    for (let i = 0; i < captions.length; i++) {
+                                        if (captions[i].innerText === structName) {
+                                            found = captions[i];
+                                        }
+                                    }
+
+                                    isOptional
+                                        ? properties.push(`borsh.option(borsh.array(${getStructLayout(found.parentNode)},${length}),'${name}')`)
+                                        : properties.push(`borsh.array(${getStructLayout(found.parentNode)},${length},'${name}')`);
+                                    break;
+                                };
+
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.array(borsh.${subType}(),${length}),'${name}')`)
+                                    : properties.push(`borsh.array(borsh.${subType}(),${length},'${name}')`);
+                                break;
+                            case 'struct':
+                                const structName = row.getElementsByTagName('input')[1].value;
+                                isOptional = row.getElementsByTagName('input')[2].checked;
+                                const struct = document.getElementById('struct-5');
+                                const captions = struct.getElementsByTagName("caption");
+
+                                let found;
+                                for (let i = 0; i < captions.length; i++) {
+                                    if (captions[i].innerText === structName) {
+                                        found = captions[i];
+                                    }
+                                }
+
+                                isOptional
+                                    ? properties.push(`borsh.option(${getStructLayout(found.parentNode)},'${name}')`)
+                                    : properties.push(getStructLayout(found.parentNode, name));
+                                break;
+                        }
+                    }
+
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    const result = layout.decode(data);
+
+                    document.getElementById('result-5').value = JSON.stringify(result, null, 5);
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-5').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            function getStructLayout(table, name = null) {
+                try {
+                    const tbody = table.getElementsByTagName('tbody')[0];
+                    const rows = tbody.getElementsByTagName('tr');
+
+                    const properties = [];
+
+                    for (let row of rows) {
+                        const name = row.getElementsByTagName('input')[0].value;
+                        const type = row.getElementsByTagName('select')[0].value;
+                        let isOptional = row.getElementsByTagName('input')[1].checked;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                            case 'publicKey':
+                            case 'bool':
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.${type}(),'${name}')`)
+                                    : properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'string':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.str(),'${name}')`)
+                                    : properties.push(`borsh.str('${name}')`);
+                                break;
+                            case 'enum':
+                                isOptional
+                                ? properties.push(`borsh.option(borsh.u8(),'${name}')`)
+                                : properties.push(`borsh.u8('${name}')`);
+                                break;
+                            case 'array':
+                                const length = row.getElementsByTagName('input')[1].value;
+                                const subType = row.getElementsByTagName('select')[1].value;
+                                isOptional = row.getElementsByTagName('input')[2].checked;
+
+                                if (subType === 'enum') subType = 'u8';
+                                if (subType === 'string') subType = 'str';
+                                if (subType === 'struct') {
+                                    const structName = row.getElementsByTagName('input')[2].value;
+                                    isOptional = row.getElementsByTagName('input')[3].checked;
+
+                                    const struct = document.getElementById('struct-5');
+                                    const captions = struct.getElementsByTagName("caption");
+
+                                    let found;
+                                    for (let i = 0; i < captions.length; i++) {
+                                        if (captions[i].innerText === structName) {
+                                            found = captions[i];
+                                        }
+                                    }
+
+                                    isOptional
+                                        ? properties.push(`borsh.option(borsh.array(${getStructLayout(found.parentNode)},${length}),'${name}')`)
+                                        : properties.push(`borsh.array(${getStructLayout(found.parentNode)},${length},'${name}')`);
+                                    break;
+                                };
+
+                                isOptional
+                                    ? properties.push(`borsh.option(borsh.array(borsh.${subType}(),${length}),'${name}')`)
+                                    : properties.push(`borsh.array(borsh.${subType}(),${length},'${name}')`);
+                                break;
+                            case 'struct':
+                                const structName = row.getElementsByTagName('input')[1].value;
+                                isOptional = row.getElementsByTagName('input')[2].checked;
+                                const struct = document.getElementById('struct-5');
+                                const captions = struct.getElementsByTagName("caption");
+
+                                let found;
+                                for (let i = 0; i < captions.length; i++) {
+                                    if (captions[i].innerText === structName) {
+                                        found = captions[i];
+                                    }
+                                }
+
+                                isOptional
+                                    ? properties.push(`borsh.option(${getStructLayout(found.parentNode)},'${name}')`)
+                                    : properties.push(getStructLayout(found.parentNode, name));
+                                break;
+                        }
+                    }
+
+                    return name
+                        ? `borsh.struct([${properties.join(',')}], '${name}')`
+                        : `borsh.struct([${properties.join(',')}])`;
+                } catch (err) {
+                    document.getElementById('result-5').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
             }
