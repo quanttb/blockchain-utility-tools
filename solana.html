@@ -169,19 +169,32 @@
                     <button onclick="deserialize()" class="uk-button uk-button-primary">Deserialize</button>
                     <textarea id="result-5" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
                 </div>
-                <div id="struct-modal-5" uk-modal>
-                    <div class="uk-modal-dialog uk-margin-auto-vertical">
-                        <button class="uk-modal-close-default" type="button" uk-close></button>
-                        <div class="uk-modal-header">
-                            <h2 class="uk-modal-title">New Struct</h2>
-                        </div>
-                        <div class="uk-modal-body">
-                            <input id="struct-name-5" class="uk-input" type="text" placeholder="Struct Name">
-                        </div>
-                        <div class="uk-modal-footer uk-text-right">
-                            <button onclick="addNewStruct5()" class="uk-button uk-button-primary" type="button">Create</button>
-                        </div>
+                <div>
+                    <tag>Coming Soon</tag>
+                </div>
+                <div>
+                    <input id="program-7" class="uk-input uk-margin-small-top" type="text" placeholder="Program Address">
+                    <textarea id="idl-7" class="uk-textarea uk-margin-top" rows="5" placeholder="IDL"></textarea>
+                    <button onclick="generateAccountsAndInstructions()" class="uk-button uk-button-primary uk-margin-top">Generate</button>
+                    <div class="uk-margin-top">
+                        <ul id="accounts-7" uk-accordion></ul>
+                        <ul id="instructions-7" uk-accordion></ul>
                     </div>
+                    <textarea id="result-7" class="uk-textarea" rows="20" disabled></textarea>
+                </div>
+            </div>
+        </div>
+        <div id="struct-modal-5" uk-modal>
+            <div class="uk-modal-dialog uk-margin-auto-vertical">
+                <button class="uk-modal-close-default" type="button" uk-close></button>
+                <div class="uk-modal-header">
+                    <h2 class="uk-modal-title">New Struct</h2>
+                </div>
+                <div class="uk-modal-body">
+                    <input id="struct-name-5" class="uk-input" type="text" placeholder="Struct Name">
+                </div>
+                <div class="uk-modal-footer uk-text-right">
+                    <button onclick="addNewStruct5()" class="uk-button uk-button-primary" type="button">Create</button>
                 </div>
             </div>
         </div>
@@ -190,13 +203,17 @@
         <script src="js/bs58.js"></script>
         <script src="js/buffer.js"></script>
         <script src="js/ed25519-hd-key.js"></script>
+        <script src="js/sha256.js"></script>
         <script>
             BigInt.prototype.toJSON = function() { return this.toString() };
 
             const web3 = solanaWeb3;
+            const SYSTEM_PROGRAM_ID = new web3.PublicKey('11111111111111111111111111111111');
+            const SYSVAR_CLOCK_ID = new web3.PublicKey('SysvarC1ock11111111111111111111111111111111');
+            const SYSVAR_INSTRUCTIONS_ID = new web3.PublicKey('Sysvar1nstructions1111111111111111111111111');
             const TOKEN_PROGRAM_ID = new web3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-            const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
             const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+            const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 
             function deleteRow(button) {
                 const row = button.parentNode.parentNode;
@@ -508,6 +525,27 @@
                     const user = new web3.PublicKey(document.getElementById('user-3').value);
                     const mint = new web3.PublicKey(document.getElementById('mint-3').value);
                     let accountInfo, parsedData, layout;
+
+                    accountInfo = await connection.getAccountInfo(mint);
+                    parsedData = null;
+                    if (accountInfo?.data) {
+                        layout = borsh.struct([
+                            borsh.u32('mintAuthorityOption'),
+                            borsh.publicKey('mintAuthority'),
+                            borsh.u64('supply'),
+                            borsh.u8('decimals'),
+                            borsh.u8('isInitialized'),
+                            borsh.u32('freezeAuthorityOption'),
+                            borsh.publicKey('freezeAuthority'),
+                        ]);
+                        parsedData = layout.decode(accountInfo.data);
+                    }
+                    accounts.push({
+                        type: 'Mint',
+                        publicKey: mint.toBase58(),
+                        parsedData,
+                        data: accountInfo?.data?.toString('hex') || null,
+                    });
 
                     const ata = web3.PublicKey.findProgramAddressSync(
                         [
@@ -926,6 +964,321 @@
                     document.getElementById('result-5').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
+            }
+
+            async function generateAccountsAndInstructions() {
+                try {
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const accounts = [];
+                    const instructions = [];
+
+                    idl.accounts.forEach((account, index) => {
+                        // const properties = [];
+
+                        // for (let fields of account.type.fields) {
+                        //     const name = fields.name;
+                        //     const type = fields.type;
+
+                        //     switch (type) {
+                        //         case 'u8':
+                        //         case 'i8':
+                        //         case 'u16':
+                        //         case 'i16':
+                        //         case 'u32':
+                        //         case 'i32':
+                        //         case 'u64':
+                        //         case 'i64':
+                        //         case 'u128':
+                        //         case 'i128':
+                        //         case 'publicKey':
+                        //         case 'bool':
+                        //             properties.push(`borsh.${type}('${name}')`);
+                        //             break;
+                        //         default:
+                        //             if (type?.vec) {
+                        //                 properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
+                        //             }
+                        //             break;
+                        //     }
+                        // }
+
+                        accounts.push(`
+                            <li>
+                                <a class="uk-accordion-title uk-text-success" href>${account.name}</a>
+                                <div class="uk-accordion-content">
+                                    <input class="uk-input uk-margin-small-bottom" type="text" placeholder="PDA">
+                                    <button onclick="read(this,${index})" class="uk-button uk-button-default">Query</button><br/>
+                                </div>
+                            </li>
+                        `);
+                    });
+
+                    idl.instructions.forEach((instruction, index) => {
+                        const inputs = [`<input id="${instruction.name}-fee-payer" class="uk-input uk-margin-small-bottom" type="text" placeholder="fee payer">`];
+                        const args = [];
+                        const types = [];
+                        const accounts = [];
+
+                        for (let arg of instruction.args) {
+                            if (arg.type?.vec) {
+                                inputs.push(`<input id="${instruction.name}-${arg.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${arg.name} (vec<${arg.type.vec}>)">`);
+                                args.push(arg.name);
+                                types.push(`vec&#60;${arg.type.vec}>`);
+                                continue;
+                            }
+
+                            inputs.push(`<input id="${instruction.name}-${arg.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${arg.name} (${arg.type})">`);
+                            args.push(arg.name);
+                            types.push(arg.type);
+                        }
+
+                        for (let account of instruction.accounts) {
+                            accounts.push(`
+                                <div class="uk-margin-remove-top" uk-grid>
+                                    <div class="uk-width-expand@m">
+                                        <input id="${instruction.name}-account-${account.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${account.name} ${account.isSigner?`(signer)`:''}">
+                                    </div>
+                                    <div>
+                                        <button class="uk-button uk-button-default">System Program</button>
+                                        <div class="uk-dropdown-small" uk-dropdown>
+                                            <ul class="uk-nav uk-dropdown-nav">
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${SYSTEM_PROGRAM_ID.toString()}'">System Program</a></li>
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${SYSVAR_CLOCK_ID.toString()}'">Sysvar Clock</a></li>
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${SYSVAR_INSTRUCTIONS_ID.toString()}'">Sysvar Instructions</a></li>
+                                                <li class="uk-nav-divider"></li>
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${TOKEN_PROGRAM_ID.toString()}'">Token Program</a></li>
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${TOKEN_METADATA_PROGRAM_ID.toString()}'">Token Metadata Program</a></li>
+                                                <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID.toString()}'">SPL ATA Program</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        }
+
+                        instructions.push(`
+                            <li>
+                                <a class="uk-accordion-title uk-text-warning" href>${instruction.name}(${types.join()})</a>
+                                <div class="uk-accordion-content">
+                                    ${inputs.join('')}
+                                    <button onclick="encode(${index})" class="uk-button uk-button-default uk-margin-small-bottom">ENCODE</button>
+                                    ${accounts.join('')}
+                                    <button onclick="simulate(${index})" class="uk-button uk-button-default">Simulate</button>
+                                    <button onclick="write(${index})" class="uk-button uk-button-default" disabled>Write</button><br/>
+                                </div>
+                            </li>
+                        `);
+                    });
+
+                    document.getElementById('accounts-7').innerHTML = accounts.join('');
+                    document.getElementById('instructions-7').innerHTML = instructions.join('');
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function read(button, accountIndex) {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const programId = new web3.PublicKey(document.getElementById('program-7').value);
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const pda = new web3.PublicKey(button.parentNode.getElementsByTagName('input')[0].value);
+                    const account = idl.accounts[accountIndex];
+                    const properties = [];
+                    let data = {};
+
+                    for (let field of account.type.fields) {
+                        const name = field.name;
+                        const type = field.type;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'publicKey':
+                                properties.push(`borsh.publicKey('${name}')`);
+                                break;
+                            case 'bool':
+                                properties.push(`borsh.bool('${name}')`);
+                                break;
+                            default:
+                                if (type?.vec) {
+                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
+                                }
+                                break;
+                        }
+                    }
+
+                    const accountInfo = await connection.getAccountInfo(pda);
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    const result = layout.decode(accountInfo.data.slice(8));
+
+                    document.getElementById('result-7').value = JSON.stringify(result, null, 5);
+                    UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function encode(instructionIndex) {
+                try {
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const instruction = idl.instructions[instructionIndex];
+                    const properties = [];
+                    let data = {};
+
+                    for (let arg of instruction.args) {
+                        const name = arg.name;
+                        const type = arg.type;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                properties.push(`borsh.${type}('${name}')`);
+                            case 'publicKey':
+                                data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.publicKey('${name}')`);
+                                break;
+                            case 'bool':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
+                                properties.push(`borsh.bool('${name}')`);
+                                break;
+                            default:
+                                // TODO
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                if (type?.vec) {
+                                    properties.push(`borsh.array(borsh.${type.vec}(),${JSON.parse(data[name]).length},'${name}')`);
+                                }
+                                break;
+                        }
+                    }
+
+                    let buffer = Buffer.alloc(1000);
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    layout.encode(data, buffer);
+                    buffer = buffer.slice(0, layout.getSpan(buffer));
+                    buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
+
+                    document.getElementById('result-7').value = buffer.toString('hex');
+                    UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function simulate(instructionIndex) {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const programId = new web3.PublicKey(document.getElementById('program-7').value);
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const instruction = idl.instructions[instructionIndex];
+                    // const properties = [`borsh.u8('instruction')`];
+                    const properties = [];
+                    let data = {};
+
+                    for (let arg of instruction.args) {
+                        const name = arg.name;
+                        const type = arg.type;
+
+                        data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                                properties.push(`borsh.${type}('${name}')`);
+                            case 'publicKey':
+                                data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.publicKey('${name}')`);
+                                break;
+                            case 'bool':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
+                                properties.push(`borsh.bool('${name}')`);
+                                break;
+                            default:
+                                if (type?.vec) {
+                                    properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
+                                }
+                                break;
+                        }
+                    }
+
+                    let buffer = Buffer.alloc(1000);
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    layout.encode(data, buffer);
+                    buffer = buffer.slice(0, layout.getSpan(buffer));
+                    buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
+
+                    const transaction = new web3.Transaction();
+                    transaction.add({
+                        programId,
+                        data: buffer,
+                        keys: instruction.accounts.map(account => {
+                            return {
+                                pubkey: new web3.PublicKey(document.getElementById(`${instruction.name}-account-${account.name}`).value),
+                                isSigner: account.isSigner,
+                                isWritable: account.isMut,
+                            };
+                        }),
+                    });
+                    transaction.feePayer = new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value);
+
+                    console.log(transaction);
+
+                    const result = await connection.simulateTransaction(transaction);
+                    console.log(result);
+                    if (result.value.err) {
+                        document.getElementById('result-7').value = JSON.stringify(result.value.err, null, 5);
+                        UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                        UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                    };
+
+                    document.getElementById('result-7').value = JSON.stringify(result, null, 5);
+                    UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            function camelToSnakeCase(str) {
+                return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+            };
+
+            function sighash(namespace, ixName) {
+                let name = camelToSnakeCase(ixName);
+                return Buffer.from(sha256(`${namespace}:${name}`).substring(0,16), 'hex');
             }
         </script>
     </body>
