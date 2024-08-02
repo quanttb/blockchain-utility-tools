@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div>
-                    <button onclick="connectToPhantom()" class="uk-button uk-button-primary" disabled>Connect to Phantom</button>
+                    <button onclick="connectToPhantom(this)" class="uk-button uk-button-primary">Connect to Phantom</button>
                 </div>
             </div>
             <ul class="uk-flex-left" uk-tab>
@@ -36,7 +36,7 @@
                 <li><a href="#">Get Transaction</a></li>
                 <li><a href="#">Deserialize</a></li>
                 <li><a href="#">Serialize (N/A)</a></li>
-                <li><a href="#">Interact with Program (N/A)</a></li>
+                <li><a href="#">Interact with Anchor Program</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
                 <div>
@@ -206,6 +206,9 @@
         <script src="js/sha256.js"></script>
         <script>
             BigInt.prototype.toJSON = function() { return this.toString() };
+
+            let provider = null;
+            let connectedWallet = null;
 
             const web3 = solanaWeb3;
             const SYSTEM_PROGRAM_ID = new web3.PublicKey('11111111111111111111111111111111');
@@ -428,7 +431,18 @@
                 document.getElementById('network').value = web3.clusterApiUrl(network);
             }
 
-            async function connectToPhantom() {}
+            async function connectToPhantom(button) {
+                if (window.solana && window.solana.isPhantom) {
+                    provider = window.solana;
+                    const response = await provider.connect();
+                    connectedWallet = new web3.PublicKey(response.publicKey.toString());
+                    button.innerText = shortenAddress(response.publicKey.toString());
+                    button.disabled = true;
+                    UIkit.notification({message: `<span uk-icon=\'icon: check\'></span> connected`, status: 'success'});
+                } else {
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
 
             async function generateNewAccount() {
                 try {
@@ -973,35 +987,6 @@
                     const instructions = [];
 
                     idl.accounts.forEach((account, index) => {
-                        // const properties = [];
-
-                        // for (let fields of account.type.fields) {
-                        //     const name = fields.name;
-                        //     const type = fields.type;
-
-                        //     switch (type) {
-                        //         case 'u8':
-                        //         case 'i8':
-                        //         case 'u16':
-                        //         case 'i16':
-                        //         case 'u32':
-                        //         case 'i32':
-                        //         case 'u64':
-                        //         case 'i64':
-                        //         case 'u128':
-                        //         case 'i128':
-                        //         case 'publicKey':
-                        //         case 'bool':
-                        //             properties.push(`borsh.${type}('${name}')`);
-                        //             break;
-                        //         default:
-                        //             if (type?.vec) {
-                        //                 properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
-                        //             }
-                        //             break;
-                        //     }
-                        // }
-
                         accounts.push(`
                             <li>
                                 <a class="uk-accordion-title uk-text-success" href>${account.name}</a>
@@ -1014,7 +999,7 @@
                     });
 
                     idl.instructions.forEach((instruction, index) => {
-                        const inputs = [`<input id="${instruction.name}-fee-payer" class="uk-input uk-margin-small-bottom" type="text" placeholder="fee payer">`];
+                        const inputs = [`<input id="${instruction.name}-fee-payer" class="uk-input uk-margin-small-bottom" type="text" placeholder="fee payer" value=${connectedWallet?.toString() || ''}>`];
                         const args = [];
                         const types = [];
                         const accounts = [];
@@ -1064,7 +1049,7 @@
                                     <button onclick="encode(${index})" class="uk-button uk-button-default uk-margin-small-bottom">ENCODE</button>
                                     ${accounts.join('')}
                                     <button onclick="simulate(${index})" class="uk-button uk-button-default">Simulate</button>
-                                    <button onclick="write(${index})" class="uk-button uk-button-default" disabled>Write</button><br/>
+                                    <button onclick="send(${index})" class="uk-button uk-button-default" ${connectedWallet ? '' : 'disabled'}>Send</button>
                                 </div>
                             </li>
                         `);
@@ -1195,7 +1180,6 @@
                     const programId = new web3.PublicKey(document.getElementById('program-7').value);
                     const idl = JSON.parse(document.getElementById('idl-7').value);
                     const instruction = idl.instructions[instructionIndex];
-                    // const properties = [`borsh.u8('instruction')`];
                     const properties = [];
                     let data = {};
 
@@ -1253,10 +1237,7 @@
                     });
                     transaction.feePayer = new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value);
 
-                    console.log(transaction);
-
                     const result = await connection.simulateTransaction(transaction);
-                    console.log(result);
                     if (result.value.err) {
                         document.getElementById('result-7').value = JSON.stringify(result.value.err, null, 5);
                         UIkit.scroll(`#result-7`).scrollTo('#result-7');
@@ -1270,6 +1251,93 @@
                     document.getElementById('result-7').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                 }
+            }
+
+            async function send(instructionIndex) {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const programId = new web3.PublicKey(document.getElementById('program-7').value);
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const instruction = idl.instructions[instructionIndex];
+                    const properties = [];
+                    let data = {};
+
+                    for (let arg of instruction.args) {
+                        const name = arg.name;
+                        const type = arg.type;
+
+                        data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                                properties.push(`borsh.${type}('${name}')`);
+                            case 'publicKey':
+                                data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.publicKey('${name}')`);
+                                break;
+                            case 'bool':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
+                                properties.push(`borsh.bool('${name}')`);
+                                break;
+                            default:
+                                if (type?.vec) {
+                                    properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
+                                }
+                                break;
+                        }
+                    }
+
+                    let buffer = Buffer.alloc(1000);
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    layout.encode(data, buffer);
+                    buffer = buffer.slice(0, layout.getSpan(buffer));
+                    buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
+
+                    const transaction = new web3.Transaction();
+                    transaction.add({
+                        programId,
+                        data: buffer,
+                        keys: instruction.accounts.map(account => {
+                            return {
+                                pubkey: new web3.PublicKey(document.getElementById(`${instruction.name}-account-${account.name}`).value),
+                                isSigner: account.isSigner,
+                                isWritable: account.isMut,
+                            };
+                        }),
+                    });
+
+                    transaction.feePayer = connectedWallet;
+                    transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+
+                    const result = await provider.signAndSendTransaction(transaction);
+
+                    document.getElementById('result-7').value = JSON.stringify(result, null, 5);
+                    UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            function shortenAddress(address, chars = 4) {
+                // Ensure the address is valid
+                if (!address) return '';
+                if (address.length <= chars * 2) return address;
+
+                // Shorten the address
+                const start = address.slice(0, chars);
+                const end = address.slice(-chars);
+                return `${start}...${end}`;
             }
 
             function camelToSnakeCase(str) {
