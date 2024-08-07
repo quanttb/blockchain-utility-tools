@@ -37,6 +37,7 @@
                 <li><a href="#">Deserialize</a></li>
                 <li><a href="#">Serialize (N/A)</a></li>
                 <li><a href="#">Interact with Anchor Program</a></li>
+                <li><a href="#">Partial Sign</a></li>
             </ul>
             <div class="uk-switcher uk-margin">
                 <div>
@@ -64,8 +65,9 @@
                                 </td>
                                 <td>
                                     <select class="uk-select">
-                                        <option>string</option>
+                                        <option>u8</option>
                                         <option>publicKey</option>
+                                        <option selected>string</option>
                                     </select>
                                 </td>
                             </tr>
@@ -182,6 +184,12 @@
                     </div>
                     <textarea id="result-7" class="uk-textarea" rows="20" disabled></textarea>
                 </div>
+                <div>
+                    <input id="tx-8" class="uk-input uk-margin-small-top" type="text" placeholder="Tx">
+                    <button onclick="partialSign()" class="uk-button uk-button-primary uk-margin-top">Sign</button>
+                    <button onclick="partialSign(true)" class="uk-button uk-button-primary uk-margin-top">Sign & Send</button>
+                    <textarea id="result-8" class="uk-textarea uk-margin-top" rows="20" disabled></textarea>
+                </div>
             </div>
         </div>
         <div id="struct-modal-5" uk-modal>
@@ -199,6 +207,7 @@
             </div>
         </div>
         <script src="js/bip39.js"></script>
+        <script src="js/bn.js"></script>
         <script src="js/borsh.js"></script>
         <script src="js/bs58.js"></script>
         <script src="js/buffer.js"></script>
@@ -236,8 +245,9 @@
                         </td>
                         <td>
                             <select class="uk-select">
-                                <option>string</option>
+                                <option>u8</option>
                                 <option>publicKey</option>
+                                <option selected>string</option>
                             </select>
                         </td>
                     </tr>
@@ -504,6 +514,9 @@
                         switch (type) {
                             case 'publicKey':
                                 seeds.push(new web3.PublicKey(val).toBuffer());
+                                break;
+                            case 'u8':
+                                seeds.push(new BN(val).toArrayLike(Buffer, 'le', 1));
                                 break;
                             case 'string':
                                 seeds.push(Buffer.from(val));
@@ -1024,7 +1037,7 @@
                                         <input id="${instruction.name}-account-${account.name}" class="uk-input uk-margin-small-bottom" type="text" placeholder="${account.name} ${account.isSigner?`(signer)`:''}">
                                     </div>
                                     <div>
-                                        <button class="uk-button uk-button-default">System Program</button>
+                                        <button class="uk-button uk-button-default">System Programs</button>
                                         <div class="uk-dropdown-small" uk-dropdown>
                                             <ul class="uk-nav uk-dropdown-nav">
                                                 <li><a href="#" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input')[0].value = '${SYSTEM_PROGRAM_ID.toString()}'">System Program</a></li>
@@ -1049,6 +1062,7 @@
                                     <button onclick="encode(${index})" class="uk-button uk-button-default uk-margin-small-bottom">ENCODE</button>
                                     ${accounts.join('')}
                                     <button onclick="simulate(${index})" class="uk-button uk-button-default">Simulate</button>
+                                    <button onclick="sign(${index})" class="uk-button uk-button-default" ${connectedWallet ? '' : 'disabled'}>Sign</button>
                                     <button onclick="send(${index})" class="uk-button uk-button-default" ${connectedWallet ? '' : 'disabled'}>Send</button>
                                 </div>
                             </li>
@@ -1073,39 +1087,8 @@
                     const properties = [];
                     let data = {};
 
-                    for (let field of account.type.fields) {
-                        const name = field.name;
-                        const type = field.type;
-
-                        switch (type) {
-                            case 'u8':
-                            case 'i8':
-                            case 'u16':
-                            case 'i16':
-                            case 'u32':
-                            case 'i32':
-                            case 'u64':
-                            case 'i64':
-                            case 'u128':
-                            case 'i128':
-                                properties.push(`borsh.${type}('${name}')`);
-                                break;
-                            case 'publicKey':
-                                properties.push(`borsh.publicKey('${name}')`);
-                                break;
-                            case 'bool':
-                                properties.push(`borsh.bool('${name}')`);
-                                break;
-                            default:
-                                if (type?.vec) {
-                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
-                                }
-                                break;
-                        }
-                    }
-
                     const accountInfo = await connection.getAccountInfo(pda);
-                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    const layout = eval(parseIdl(account, idl.types));
                     const result = layout.decode(accountInfo.data.slice(8));
 
                     document.getElementById('result-7').value = JSON.stringify(result, null, 5);
@@ -1135,12 +1118,16 @@
                             case 'i16':
                             case 'u32':
                             case 'i32':
+                                data[name] = Number(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'u64':
                             case 'i64':
                             case 'u128':
                             case 'i128':
-                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                data[name] = new BN(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'publicKey':
                                 data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.publicKey('${name}')`);
@@ -1150,10 +1137,20 @@
                                 properties.push(`borsh.bool('${name}')`);
                                 break;
                             default:
-                                // TODO
-                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
                                 if (type?.vec) {
-                                    properties.push(`borsh.array(borsh.${type.vec}(),${JSON.parse(data[name]).length},'${name}')`);
+                                    const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
+                                    switch (type.vec) {
+                                        case 'publicKey':
+                                            data[name] = value.map(e => new web3.PublicKey(e));
+                                            break;
+                                        case 'boolean':
+                                            data[name] = value.map(e => e === 'true' || e === true);
+                                            break;
+                                        default:
+                                            data[name] = value;
+                                            break;
+                                    }
+                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
                                 }
                                 break;
                         }
@@ -1187,8 +1184,6 @@
                         const name = arg.name;
                         const type = arg.type;
 
-                        data[name] = document.getElementById(`${instruction.name}-${name}`).value;
-
                         switch (type) {
                             case 'u8':
                             case 'i8':
@@ -1196,11 +1191,16 @@
                             case 'i16':
                             case 'u32':
                             case 'i32':
+                                data[name] = Number(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'u64':
                             case 'i64':
                             case 'u128':
                             case 'i128':
+                                data[name] = new BN(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'publicKey':
                                 data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.publicKey('${name}')`);
@@ -1211,7 +1211,19 @@
                                 break;
                             default:
                                 if (type?.vec) {
-                                    properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
+                                    const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
+                                    switch (type.vec) {
+                                        case 'publicKey':
+                                            data[name] = value.map(e => new web3.PublicKey(e));
+                                            break;
+                                        case 'boolean':
+                                            data[name] = value.map(e => e === 'true' || e === true);
+                                            break;
+                                        default:
+                                            data[name] = value;
+                                            break;
+                                    }
+                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
                                 }
                                 break;
                         }
@@ -1242,6 +1254,7 @@
                         document.getElementById('result-7').value = JSON.stringify(result.value.err, null, 5);
                         UIkit.scroll(`#result-7`).scrollTo('#result-7');
                         UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                        return;
                     };
 
                     document.getElementById('result-7').value = JSON.stringify(result, null, 5);
@@ -1253,7 +1266,7 @@
                 }
             }
 
-            async function send(instructionIndex) {
+            async function sign(instructionIndex) {
                 try {
                     const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
                     const programId = new web3.PublicKey(document.getElementById('program-7').value);
@@ -1266,8 +1279,6 @@
                         const name = arg.name;
                         const type = arg.type;
 
-                        data[name] = document.getElementById(`${instruction.name}-${name}`).value;
-
                         switch (type) {
                             case 'u8':
                             case 'i8':
@@ -1275,11 +1286,16 @@
                             case 'i16':
                             case 'u32':
                             case 'i32':
+                                data[name] = Number(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'u64':
                             case 'i64':
                             case 'u128':
                             case 'i128':
+                                data[name] = new BN(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.${type}('${name}')`);
+                                break;
                             case 'publicKey':
                                 data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
                                 properties.push(`borsh.publicKey('${name}')`);
@@ -1290,7 +1306,19 @@
                                 break;
                             default:
                                 if (type?.vec) {
-                                    properties.push(`borsh.array(borsh.${type.vec}(),'${name}')`);
+                                    const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
+                                    switch (type.vec) {
+                                        case 'publicKey':
+                                            data[name] = value.map(e => new web3.PublicKey(e));
+                                            break;
+                                        case 'boolean':
+                                            data[name] = value.map(e => e === 'true' || e === true);
+                                            break;
+                                        default:
+                                            data[name] = value;
+                                            break;
+                                    }
+                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
                                 }
                                 break;
                         }
@@ -1316,7 +1344,102 @@
                     });
 
                     transaction.feePayer = connectedWallet;
-                    transaction.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+                    transaction.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash;
+
+                    const result = await provider.signTransaction(transaction);
+                    const serializedTransaction = result.serialize({
+                        requireAllSignatures: false,
+                    });
+                    const transactionBase64 = serializedTransaction.toString('base64');
+
+                    document.getElementById('result-7').value = transactionBase64;
+                    UIkit.scroll(`#result-7`).scrollTo('#result-7');
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-7').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function send(instructionIndex) {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const programId = new web3.PublicKey(document.getElementById('program-7').value);
+                    const idl = JSON.parse(document.getElementById('idl-7').value);
+                    const instruction = idl.instructions[instructionIndex];
+                    const properties = [];
+                    let data = {};
+
+                    for (let arg of instruction.args) {
+                        const name = arg.name;
+                        const type = arg.type;
+
+                        switch (type) {
+                            case 'u8':
+                            case 'i8':
+                            case 'u16':
+                            case 'i16':
+                            case 'u32':
+                            case 'i32':
+                                data[name] = Number(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'u64':
+                            case 'i64':
+                            case 'u128':
+                            case 'i128':
+                                data[name] = new BN(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.${type}('${name}')`);
+                                break;
+                            case 'publicKey':
+                                data[name] = new web3.PublicKey(document.getElementById(`${instruction.name}-${name}`).value);
+                                properties.push(`borsh.publicKey('${name}')`);
+                                break;
+                            case 'bool':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
+                                properties.push(`borsh.bool('${name}')`);
+                                break;
+                            default:
+                                if (type?.vec) {
+                                    const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
+                                    switch (type.vec) {
+                                        case 'publicKey':
+                                            data[name] = value.map(e => new web3.PublicKey(e));
+                                            break;
+                                        case 'boolean':
+                                            data[name] = value.map(e => e === 'true' || e === true);
+                                            break;
+                                        default:
+                                            data[name] = value;
+                                            break;
+                                    }
+                                    properties.push(`borsh.vec(borsh.${type.vec}(),'${name}')`);
+                                }
+                                break;
+                        }
+                    }
+
+                    let buffer = Buffer.alloc(1000);
+                    const layout = eval(`borsh.struct([${properties.join(',')}])`);
+                    layout.encode(data, buffer);
+                    buffer = buffer.slice(0, layout.getSpan(buffer));
+                    buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
+
+                    const transaction = new web3.Transaction();
+                    transaction.add({
+                        programId,
+                        data: buffer,
+                        keys: instruction.accounts.map(account => {
+                            return {
+                                pubkey: new web3.PublicKey(document.getElementById(`${instruction.name}-account-${account.name}`).value),
+                                isSigner: account.isSigner,
+                                isWritable: account.isMut,
+                            };
+                        }),
+                    });
+
+                    transaction.feePayer = connectedWallet;
+                    transaction.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash;
 
                     const result = await provider.signAndSendTransaction(transaction);
 
@@ -1326,6 +1449,137 @@
                 } catch (err) {
                     document.getElementById('result-7').value = err.message;
                     UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            async function partialSign(send = false) {
+                try {
+                    const connection = new web3.Connection(document.getElementById('network').value, 'confirmed');
+                    const tx = document.getElementById('tx-8').value;
+
+                    const recoveredTransaction = web3.Transaction.from(
+                        Buffer.from(tx, "base64")
+                    );
+
+                    if (send) {
+                        const result = await provider.signAndSendTransaction(recoveredTransaction);
+                        document.getElementById('result-8').value = JSON.stringify(result, null, 5);
+                        UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                        return;
+                    }
+
+                    const result = await provider.signTransaction(recoveredTransaction);
+                    const serializedTransaction = result.serialize({
+                        requireAllSignatures: false,
+                    });
+                    const transactionBase64 = serializedTransaction.toString('base64');
+
+                    document.getElementById('result-8').value = transactionBase64;
+                    UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
+                } catch (err) {
+                    document.getElementById('result-8').value = err.message;
+                    UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
+                }
+            }
+
+            function parseIdl(t, types, name = null) {
+                if (t.type.kind === 'enum') {
+                    const variants = [];
+
+                    for (const variant of t.type.variants) {
+                        if (!variant.fields) {
+                            variants.push(`borsh.struct([],'${variant.name}')`);
+                            continue;
+                        }
+
+                        const fields = [];
+
+                        for (const field of variant.fields) {
+                            switch (field.type) {
+                                case 'u8':
+                                case 'u16':
+                                case 'u32':
+                                case 'u64':
+                                case 'u128':
+                                case 'i8':
+                                case 'i16':
+                                case 'i32':
+                                case 'i64':
+                                case 'i128':
+                                case 'f32':
+                                case 'f64':
+                                case 'publicKey':
+                                case 'bool':
+                                    fields.push(`borsh.${field.type}('${field.name}')`);
+                                    break;
+                                case 'string':
+                                    fields.push(`borsh.str('${field.name}')`);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        variants.push(`borsh.struct([${fields.join(',')}],'${variant.name}')`);
+                    }
+
+                    return name
+                        ? `borsh.rustEnum([${variants.join(',')}]).replicate('${name}')`
+                        : `borsh.rustEnum([${variants.join(',')}])`;
+                } else if (t.type.kind === 'struct') {
+                    const fields = [];
+
+                    for (const field of t.type.fields) {
+                        switch (field.type) {
+                            case 'u8':
+                            case 'u16':
+                            case 'u32':
+                            case 'u64':
+                            case 'u128':
+                            case 'i8':
+                            case 'i16':
+                            case 'i32':
+                            case 'i64':
+                            case 'i128':
+                            case 'f32':
+                            case 'f64':
+                            case 'publicKey':
+                            case 'bool':
+                                fields.push(`borsh.${field.type}('${field.name}')`);
+                                break;
+                            case 'string':
+                                fields.push(`borsh.str('${field.name}')`);
+                                break;
+                            default:
+                                if (field.type?.array) {
+                                    fields.push(`borsh.array(borsh.${field.type.array[0]}(),${field.type.array[1]},'${field.name}')`);
+                                } else if (field.type?.vec) {
+                                    if (field.type.vec?.defined) {
+                                        const type = types.find(t => t.name === field.type.vec.defined);
+                                        fields.push(`borsh.vec(${parseIdl(type, types)},'${field.name}')`);
+                                    } else {
+                                        fields.push(`borsh.vec(borsh.${field.type.vec}(),'${field.name}')`);
+                                    }
+                                } else if (field.type?.defined) {
+                                    const type = types.find(t => t.name === field.type.defined);
+                                    fields.push(parseIdl(type, types, field.name));
+                                } else if (field.type?.option) {
+                                    if (field.type.option?.defined) {
+                                        const type = types.find(t => t.name === field.type.option.defined);
+                                        fields.push(`borsh.option(${parseIdl(type, types)},'${field.name}')`);
+                                    } else if (field.type.option === 'string') {
+                                        fields.push(`borsh.option(borsh.str(),'${field.name}')`);
+                                    } else {
+                                        fields.push(`borsh.option(borsh.${field.type.option}(),'${field.name}')`);
+                                    }
+                                }
+                                break;
+                        }
+                    }
+
+                    return name
+                        ? `borsh.struct([${fields.join(',')}],'${name}')`
+                        : `borsh.struct([${fields.join(',')}])`;
                 }
             }
 
