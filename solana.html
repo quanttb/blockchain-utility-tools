@@ -518,10 +518,10 @@
                                 seeds.push(new web3.PublicKey(val).toBuffer());
                                 break;
                             case 'u8':
-                                seeds.push(new BN(val).toBuffer('le', 1));
+                                seeds.push(new BN(val).toArrayLike(Buffer, 'le', 1));
                                 break;
                             case 'u64':
-                                seeds.push(new BN(val).toBuffer('le', 8));
+                                seeds.push(new BN(val).toArrayLike(Buffer, 'le', 8));
                                 break;
                             case 'string':
                                 seeds.push(Buffer.from(val));
