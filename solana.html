@@ -216,6 +216,7 @@
         <script src="js/sha256.js"></script>
         <script>
             BigInt.prototype.toJSON = function() { return this.toString() };
+            String.prototype.toJSON = function() { return this.replace(/\u0000+$/, '') };
 
             let provider = null;
             let connectedWallet = null;
@@ -765,7 +766,7 @@
                         data: accountInfo?.data?.toString('hex') || null,
                     });
 
-                    document.getElementById('result-3').value = JSON.stringify(accounts, null, 5);
+                    document.getElementById('result-3').value = JSON.stringify(formatBorshOutput(accounts), null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-3').value = err.message;
@@ -891,7 +892,7 @@
                     const layout = eval(`borsh.struct([${properties.join(',')}])`);
                     const result = layout.decode(data);
 
-                    document.getElementById('result-5').value = JSON.stringify(result, null, 5);
+                    document.getElementById('result-5').value = JSON.stringify(formatBorshOutput(result), null, 5);
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
                     document.getElementById('result-5').value = err.message;
@@ -1096,7 +1097,7 @@
                     const layout = eval(parseIdl(account, idl.types));
                     const result = layout.decode(accountInfo.data.slice(8));
 
-                    document.getElementById('result-7').value = JSON.stringify(result, null, 5);
+                    document.getElementById('result-7').value = JSON.stringify(formatBorshOutput(result), null, 5);
                     UIkit.scroll(`#result-7`).scrollTo('#result-7');
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {
@@ -1606,6 +1607,67 @@
             function sighash(namespace, ixName) {
                 let name = camelToSnakeCase(ixName);
                 return Buffer.from(sha256(`${namespace}:${name}`).substring(0,16), 'hex');
+            }
+
+            function formatBorshOutput(obj) {
+                if (typeof obj == "string") {
+                    return obj.replace(/\u0000+$/, '');;
+                } else if (isPublicKey(obj)) {
+                    return obj;
+                } else if (isBN(obj)) {
+                    const bn = castToBN(obj);
+                    return obj.toString(10);
+                } else if (Array.isArray(obj)) {
+                    return obj.map(formatBorshOutput);
+                } else if (typeof obj === 'object' && obj !== null) {
+                    const convertedObj = {};
+                    for (const key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            convertedObj[key] = formatBorshOutput(obj[key]);
+                        }
+                    }
+                    return convertedObj;
+                }
+
+                return obj;
+            }
+
+            function isPublicKey(obj) {
+                return (
+                    obj &&
+                    typeof obj === 'object' &&
+                    typeof obj.toBuffer === 'function' &&
+                    typeof obj.toBase58 === 'function' &&
+                    obj.toBuffer().length === 32
+                );
+            }
+
+            function isBN(obj) {
+                return (
+                    obj instanceof BN || (
+                        obj !== null &&
+                        typeof obj === 'object' &&
+                        Array.isArray(obj.words) &&
+                        typeof obj.length === 'number' &&
+                        typeof obj.negative === 'number' &&
+                        (obj.red === null || typeof obj.red === 'object')
+                    )
+                );
+            }
+
+            function castToBN(obj) {
+                if (isBN(obj)) {
+                    if (obj instanceof BN) {
+                        return obj;
+                    } else {
+                        const bnInstance = new BN(obj.words.slice(0, obj.length), 10);
+                        bnInstance.negative = obj.negative;
+                        bnInstance.red = obj.red;
+                        return bnInstance;
+                    }
+                } else {
+                    return obj;
+                }
             }
         </script>
     </body>
