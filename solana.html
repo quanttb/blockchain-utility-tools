@@ -66,6 +66,7 @@
                                 <td>
                                     <select class="uk-select">
                                         <option>u8</option>
+                                        <option>u64</option>
                                         <option>publicKey</option>
                                         <option selected>string</option>
                                     </select>
@@ -246,6 +247,7 @@
                         <td>
                             <select class="uk-select">
                                 <option>u8</option>
+                                <option>u64</option>
                                 <option>publicKey</option>
                                 <option selected>string</option>
                             </select>
@@ -517,6 +519,9 @@
                                 break;
                             case 'u8':
                                 seeds.push(new BN(val).toArrayLike(Buffer, 'le', 1));
+                                break;
+                            case 'u64':
+                                seeds.push(new BN(val).toArrayLike(Buffer, 'le', 8));
                                 break;
                             case 'string':
                                 seeds.push(Buffer.from(val));
@@ -1251,7 +1256,7 @@
 
                     const result = await connection.simulateTransaction(transaction);
                     if (result.value.err) {
-                        document.getElementById('result-7').value = JSON.stringify(result.value.err, null, 5);
+                        document.getElementById('result-7').value = JSON.stringify(result, null, 5);
                         UIkit.scroll(`#result-7`).scrollTo('#result-7');
                         UIkit.notification({message: '<span uk-icon=\'icon: close\'></span> error', status: 'danger'});
                         return;
