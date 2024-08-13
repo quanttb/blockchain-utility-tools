@@ -218,7 +218,7 @@
                     const writeFunctions = [];
                     functions.forEach(f => {
                         if (f.type === 'function') {
-                            if (f.constant) {
+                            if (f.stateMutability === 'view' || f.stateMutability === 'pure') {
                                 if (f.inputs.length) {
                                     const inputs = [];
                                     const args = [];
@@ -310,7 +310,7 @@
                     } else {
                         result = await contract.methods[functionName]().call();
                     }
-                    document.getElementById('result-4').value = result;
+                    document.getElementById('result-4').value = JSON.stringify(result, null, 5);
                     UIkit.scroll(`#result-4`).scrollTo('#result-4');
                     UIkit.notification({message: '<span uk-icon=\'icon: check\'></span> success', status: 'success'});
                 } catch (err) {

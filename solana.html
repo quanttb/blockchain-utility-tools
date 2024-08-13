@@ -1005,7 +1005,7 @@
                     const accounts = [];
                     const instructions = [];
 
-                    idl.accounts.forEach((account, index) => {
+                    idl.accounts?.forEach((account, index) => {
                         accounts.push(`
                             <li>
                                 <a class="uk-accordion-title uk-text-success" href>${account.name}</a>
@@ -1017,8 +1017,8 @@
                         `);
                     });
 
-                    idl.instructions.forEach((instruction, index) => {
-                        const inputs = [`<input id="${instruction.name}-fee-payer" class="uk-input uk-margin-small-bottom" type="text" placeholder="fee payer" value=${connectedWallet?.toString() || ''}>`];
+                    idl.instructions?.forEach((instruction, index) => {
+                        const inputs = [];
                         const args = [];
                         const types = [];
                         const accounts = [];
@@ -1067,6 +1067,17 @@
                                     ${inputs.join('')}
                                     <button onclick="encode(${index})" class="uk-button uk-button-default uk-margin-small-bottom">ENCODE</button>
                                     ${accounts.join('')}
+                                    <div class="uk-margin-remove-top" uk-grid>
+                                        <div class="uk-width-expand@m">
+                                            <input id="${instruction.name}-fee-payer" class="uk-input uk-margin-small-bottom" type="text" placeholder="fee payer" value=${connectedWallet?.toString() || ''}>
+                                        </div>
+                                        <div class="uk-width-1-4@m">
+                                            <input id="${instruction.name}-compute-unit-limit" class="uk-input uk-margin-small-bottom" type="text" placeholder="compute unit limit (optional)">
+                                        </div>
+                                        <div class="uk-width-1-4@m">
+                                            <input id="${instruction.name}-compute-unit-price" class="uk-input uk-margin-small-bottom" type="text" placeholder="compute unit price (optional)">
+                                        </div>
+                                    </div>
                                     <button onclick="simulate(${index})" class="uk-button uk-button-default">Simulate</button>
                                     <button onclick="sign(${index})" class="uk-button uk-button-default" ${connectedWallet ? '' : 'disabled'}>Sign</button>
                                     <button onclick="send(${index})" class="uk-button uk-button-default" ${connectedWallet ? '' : 'disabled'}>Send</button>
@@ -1142,6 +1153,10 @@
                                 data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
                                 properties.push(`borsh.bool('${name}')`);
                                 break;
+                            case 'string':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                properties.push(`borsh.str('${name}')`);
+                                break;
                             default:
                                 if (type?.vec) {
                                     const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
@@ -1215,6 +1230,10 @@
                                 data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
                                 properties.push(`borsh.bool('${name}')`);
                                 break;
+                            case 'string':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                properties.push(`borsh.str('${name}')`);
+                                break;
                             default:
                                 if (type?.vec) {
                                     const value = eval(document.getElementById(`${instruction.name}-${name}`).value);
@@ -1241,7 +1260,11 @@
                     buffer = buffer.slice(0, layout.getSpan(buffer));
                     buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
 
-                    const transaction = new web3.Transaction();
+                    const transaction = createTransaction(
+                        new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value),
+                        document.getElementById(`${instruction.name}-compute-unit-limit`).value,
+                        document.getElementById(`${instruction.name}-compute-unit-price`).value
+                    );
                     transaction.add({
                         programId,
                         data: buffer,
@@ -1253,7 +1276,7 @@
                             };
                         }),
                     });
-                    transaction.feePayer = new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value);
+                    // transaction.feePayer = new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value);
 
                     const result = await connection.simulateTransaction(transaction);
                     if (result.value.err) {
@@ -1309,6 +1332,10 @@
                             case 'bool':
                                 data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
                                 properties.push(`borsh.bool('${name}')`);
+                                break;
+                            case 'string':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                properties.push(`borsh.str('${name}')`);
                                 break;
                             default:
                                 if (type?.vec) {
@@ -1404,6 +1431,10 @@
                             case 'bool':
                                 data[name] = document.getElementById(`${instruction.name}-${name}`).value === 'true';
                                 properties.push(`borsh.bool('${name}')`);
+                                break;
+                            case 'string':
+                                data[name] = document.getElementById(`${instruction.name}-${name}`).value;
+                                properties.push(`borsh.str('${name}')`);
                                 break;
                             default:
                                 if (type?.vec) {
@@ -1668,6 +1699,21 @@
                 } else {
                     return obj;
                 }
+            }
+
+            function createTransaction(feePayer, computeUnitLimit, computeUnitPrice) {
+                const transaction = new web3.Transaction();
+                transaction.feePayer = feePayer;
+
+                if (computeUnitLimit.length !== 0) {
+                    transaction.add(web3.ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitLimit }));
+                }
+
+                if (computeUnitPrice.length !== 0) {
+                    transaction.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ units: computeUnitPrice }));
+                }
+
+                return transaction;
             }
         </script>
     </body>
