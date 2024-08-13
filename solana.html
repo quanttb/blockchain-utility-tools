@@ -441,6 +441,10 @@
             }
 
             async function setNetwork(network) {
+                if (network === 'mainnet-beta') {
+                    document.getElementById('network').value = 'https://solana-mainnet.gateway.tatum.io';
+                    return;
+                }
                 document.getElementById('network').value = web3.clusterApiUrl(network);
             }
 
@@ -1276,7 +1280,6 @@
                             };
                         }),
                     });
-                    // transaction.feePayer = new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value);
 
                     const result = await connection.simulateTransaction(transaction);
                     if (result.value.err) {
@@ -1363,7 +1366,11 @@
                     buffer = buffer.slice(0, layout.getSpan(buffer));
                     buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
 
-                    const transaction = new web3.Transaction();
+                    const transaction = createTransaction(
+                        new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value),
+                        document.getElementById(`${instruction.name}-compute-unit-limit`).value,
+                        document.getElementById(`${instruction.name}-compute-unit-price`).value
+                    );
                     transaction.add({
                         programId,
                         data: buffer,
@@ -1375,8 +1382,6 @@
                             };
                         }),
                     });
-
-                    transaction.feePayer = connectedWallet;
                     transaction.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash;
 
                     const result = await provider.signTransaction(transaction);
@@ -1462,7 +1467,11 @@
                     buffer = buffer.slice(0, layout.getSpan(buffer));
                     buffer = Buffer.concat([sighash('global', instruction.name), buffer]);
 
-                    const transaction = new web3.Transaction();
+                    const transaction = createTransaction(
+                        new web3.PublicKey(document.getElementById(`${instruction.name}-fee-payer`).value),
+                        document.getElementById(`${instruction.name}-compute-unit-limit`).value,
+                        document.getElementById(`${instruction.name}-compute-unit-price`).value
+                    );
                     transaction.add({
                         programId,
                         data: buffer,
@@ -1474,8 +1483,6 @@
                             };
                         }),
                     });
-
-                    transaction.feePayer = connectedWallet;
                     transaction.recentBlockhash = (await connection.getLatestBlockhash('confirmed')).blockhash;
 
                     const result = await provider.signAndSendTransaction(transaction);
