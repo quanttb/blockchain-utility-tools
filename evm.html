@@ -281,7 +281,7 @@
 
                                     writeFunctions.push(`
                                         <li>
-                                            <a class="uk-accordion-title uk-text-warning" href>${f.name}(${types.join()})</a>
+                                            <a class="uk-accordion-title uk-text-warning" href>${f.name}(${types.join()}) (${web3.eth.abi.encodeFunctionSignature(`${f.name}(${types.join()})`)})</a>
                                             <div class="uk-accordion-content">
                                                 ${inputs.join('')}
                                                 <button onclick="encode('${f.name}',['${args.join("','")}'])" class="uk-button uk-button-default">ENCODE</button>
@@ -293,7 +293,7 @@
                                 } else {
                                     writeFunctions.push(`
                                         <li>
-                                            <a class="uk-accordion-title uk-text-warning" href>${f.name}</a>
+                                            <a class="uk-accordion-title uk-text-warning" href>${f.name} (${web3.eth.abi.encodeFunctionSignature(f.name)})</a>
                                             <div class="uk-accordion-content">
                                                 <input id="${f.name}-sender" class="uk-input uk-margin-small-bottom" type="text" placeholder="sender">
                                                 <button onclick="encode('${f.name}',[])" class="uk-button uk-button-default">Encode</button>
